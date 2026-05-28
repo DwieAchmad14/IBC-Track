@@ -632,7 +632,7 @@
       <div class="modal-body">
         <p style="margin-bottom: 12px;">Daftar email yang diizinkan untuk mengedit (pisahkan dengan koma atau baris baru):</p>
         <textarea id="accessEmailsArea" style="width: 100%; height: 150px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--f-mono); font-size: 12px; resize: vertical;" spellcheck="false"></textarea>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">Catatan: Email dengan domain @vibescoding.com dan @vibescoding.id secara otomatis diberikan hak akses dan tidak perlu ditambahkan ke daftar ini.</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">Catatan: <b>dwieachmad14@gmail.com</b> dan <b>formulasiwaferjn3@gmail.com</b> adalah admin tetap sistem, tidak perlu ditambahkan ke daftar ini karena tidak bisa dihapus. Email dengan domain @vibescoding.com dan @vibescoding.id juga otomatis memiliki hak akses.</p>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" id="btnAccessCancel">Batal</button>
@@ -1320,8 +1320,13 @@
     const SPREADSHEET_ID = '1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng';
 
     // Default editors if nothing in localStorage
-    const DEFAULT_EDITORS = [
+    const FIXED_EDITORS = [
        "dwieachmad14@gmail.com",
+       "formulasiwaferjn3@gmail.com"
+    ];
+
+    const DEFAULT_EDITORS = [
+       ...FIXED_EDITORS,
        "vibescoding@gmail.com",
        "vibescoding.id@gmail.com",
        "owner@vibescoding.com",
@@ -1329,14 +1334,22 @@
     ];
 
     function getAuthorizedEditors() {
+       let result = [...DEFAULT_EDITORS];
        const stored = localStorage.getItem('authorized_editors');
        if (stored) {
           try {
              const parsed = JSON.parse(stored);
-             if (Array.isArray(parsed)) return parsed;
+             if (Array.isArray(parsed)) result = parsed;
           } catch(e) {}
        }
-       return [...DEFAULT_EDITORS];
+       
+       // Ensure FIXED_EDITORS are always present
+       FIXED_EDITORS.forEach(fixedEmail => {
+           if (!result.includes(fixedEmail)) {
+               result.push(fixedEmail);
+           }
+       });
+       return result;
     }
 
     function parseCSV(text) {
@@ -1579,8 +1592,14 @@
              // Extract unique
              const uniqueEmails = [...new Set(validEmails)];
              
-             if (uniqueEmails.length === 0) {
-                 window.showToast("Daftar email kosong, kembali ke default.");
+             FIXED_EDITORS.forEach(fixedEmail => {
+                 if (!uniqueEmails.includes(fixedEmail)) {
+                     uniqueEmails.push(fixedEmail);
+                 }
+             });
+             
+             if (uniqueEmails.length === FIXED_EDITORS.length) {
+                 window.showToast("Daftar email kosong (kecuali admin tetap), kembali ke default.");
                  localStorage.removeItem('authorized_editors');
              } else {
                  localStorage.setItem('authorized_editors', JSON.stringify(uniqueEmails));
