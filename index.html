@@ -515,10 +515,12 @@
         </svg>
         Sign in with Google
       </button>
-      <div id="userInfo" style="display: none; align-items: center; gap: 12px; font-size: 13px;">
-        <button id="btnManageEditors" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; display: none; align-items: center; gap: 6px;">Kelola Editor</button>
+      <div id="userInfo" style="display: none; align-items: center; gap: 8px; font-size: 13px;">
         <span id="userEmail" style="font-weight: 500; display: flex; align-items: center;"></span>
-        <button id="btnSignOut" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Sign Out</button>
+        <button id="btnSettings" style="background: transparent; border: none; color: white; padding: 4px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: opacity 0.2s;" title="Pengaturan Akses" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+        <button id="btnSignOut" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 4px;">Sign Out</button>
       </div>
     </div>
   </header>
@@ -620,31 +622,21 @@
     </div>
   </div>
 
-  <div id="modalManageEditors" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header" style="justify-content: space-between; border-bottom: none; padding-bottom: 0;">
-        <h2 style="font-size: 18px; margin: 0;">Kelola Akses Editor</h2>
-        <button class="close-btn" onclick="document.getElementById('modalManageEditors').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light);">&times;</button>
+  <!-- Modal for Access Settings -->
+  <div class="modal-overlay" id="accessModal">
+    <div class="modal" style="width: 500px;">
+      <div class="modal-header">
+        <i data-lucide="shield" style="color: var(--steel); width: 20px; height: 20px;"></i>
+        <h3>Pengaturan Akses Pengeditan</h3>
       </div>
-      <div class="modal-body" style="padding-top: 8px;">
-        <p style="margin-top: 0; color: var(--text-light); font-size: 13px;">Daftarkan email yang diizinkan untuk mengedit data ini.</p>
-        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-          <input type="email" id="newEditorEmail" placeholder="Masukkan Email SSO Google" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" />
-          <button id="btnAddEditorConfirm" style="background: var(--primary); color: white; border: none; padding: 0 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Tambah</button>
-        </div>
-        <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-height: 300px; overflow-y: auto;">
-          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align: left;">
-            <thead style="background: var(--bg); position: sticky; top: 0;">
-              <tr>
-                <th style="padding: 10px 12px; border-bottom: 1px solid var(--border);">Email</th>
-                <th style="padding: 10px 12px; border-bottom: 1px solid var(--border); width: 80px;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="editorsListBody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
-        </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px;">Daftar email yang diizinkan untuk mengedit (pisahkan dengan koma atau baris baru):</p>
+        <textarea id="accessEmailsArea" style="width: 100%; height: 150px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--f-mono); font-size: 12px; resize: vertical;" spellcheck="false"></textarea>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">Catatan: Email dengan domain @vibescoding.com dan @vibescoding.id secara otomatis diberikan hak akses dan tidak perlu ditambahkan ke daftar ini.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnAccessCancel">Batal</button>
+        <button class="btn-primary" id="btnAccessSave">Simpan</button>
       </div>
     </div>
   </div>
@@ -1316,95 +1308,36 @@
       attachListeners();
     });
 
-
-    window.addEventListener('DOMContentLoaded', () => {
-        const btnManageEditors = document.getElementById('btnManageEditors');
-        if (btnManageEditors) {
-            btnManageEditors.addEventListener('click', () => {
-                document.getElementById('modalManageEditors').style.display = 'flex';
-                renderEditorsModal();
-            });
-        }
-        
-        const btnAddEditorConfirm = document.getElementById('btnAddEditorConfirm');
-        if (btnAddEditorConfirm) {
-            btnAddEditorConfirm.addEventListener('click', async () => {
-                const emailInput = document.getElementById('newEditorEmail');
-                const val = emailInput.value.trim().toLowerCase();
-                if(!val || val.indexOf('@')===-1) return alert('Email tidak valid');
-                
-                try {
-                    let docId = val.replace(/[^a-zA-Z0-9_-]/g, '_');
-                    await window.firebaseSetDoc(window.firebaseDoc(window.authDb, 'editors', docId), {
-                        email: val,
-                        addedBy: window.auth.currentUser.email,
-                        createdAt: Date.now()
-                    });
-                    emailInput.value = '';
-                    window.showToast("Editor berhasil ditambahkan!");
-                } catch(e) {
-                    console.error(e);
-                    alert("Gagal menambahkan: " + e.message);
-                }
-            });
-        }
-    });
-
-    window.removeEditor = async function(docId) {
-        if(!confirm('Hapus editor ini?')) return;
-        try {
-            await window.firebaseDeleteDoc(window.firebaseDoc(window.authDb, 'editors', docId));
-            window.showToast("Editor berhasil dihapus!");
-        } catch(e) {
-            console.error(e);
-            alert("Gagal menghapus: " + e.message);
-        }
-    };
-
-    window.renderEditorsModal = function() {
-        const body = document.getElementById('editorsListBody');
-        if(!body) return;
-        body.innerHTML = '';
-        
-        let uniqueEditors = [...new Set(window.AUTHORIZED_EDITORS)];
-        uniqueEditors.forEach(em => {
-            let tr = document.createElement('tr');
-            let isDefault = ["dwieachmad14@gmail.com", "vibescoding@gmail.com", "vibescoding.id@gmail.com", "owner@vibescoding.com", "admin@vibescoding.com"].includes(em);
-            
-            let actionBtn = isDefault ? '<span style="color:#aaa; font-size:11px;">Default</span>' : `<button onclick="window.removeEditor('${em.replace(/[^a-zA-Z0-9_-]/g, '_')}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>`;
-            
-            tr.innerHTML = `
-                <td style="padding:10px 12px; border-bottom:1px solid var(--border);">${em}</td>
-                <td style="padding:10px 12px; border-bottom:1px solid var(--border);">${actionBtn}</td>
-            `;
-            body.appendChild(tr);
-        });
-    };
-
   </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, onSnapshot, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let authApp = null;
     let auth = null;
     let cachedAccessToken = null;
-    window.firebaseSetDoc = setDoc;
-    window.firebaseDeleteDoc = deleteDoc;
-    window.firebaseDoc = doc;
     const SPREADSHEET_ID = '1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng';
 
-    window.authDb = null;
-    let authDb = null;
-    let AUTHORIZED_EDITORS = [
+    // Default editors if nothing in localStorage
+    const DEFAULT_EDITORS = [
        "dwieachmad14@gmail.com",
        "vibescoding@gmail.com",
        "vibescoding.id@gmail.com",
        "owner@vibescoding.com",
        "admin@vibescoding.com"
     ];
+
+    function getAuthorizedEditors() {
+       const stored = localStorage.getItem('authorized_editors');
+       if (stored) {
+          try {
+             const parsed = JSON.parse(stored);
+             if (Array.isArray(parsed)) return parsed;
+          } catch(e) {}
+       }
+       return [...DEFAULT_EDITORS];
+    }
 
     function parseCSV(text) {
        let lines = [];
@@ -1478,27 +1411,30 @@
     window.updateUIPermissions = function() {
        const currentUser = auth ? auth.currentUser : null;
        const userEmail = document.getElementById('userEmail');
+       const btnSettings = document.getElementById('btnSettings');
        
        if (currentUser && currentUser.email) {
           const email = currentUser.email.toLowerCase();
-          const isAllowed = AUTHORIZED_EDITORS.includes(email) || 
+          const authorizedEmails = getAuthorizedEditors();
+          const isAllowed = authorizedEmails.includes(email) || 
                             email.endsWith('@vibescoding.com') || 
                             email.endsWith('@vibescoding.id');
           
           window.hasEditPermission = isAllowed;
-          window.AUTHORIZED_EDITORS = AUTHORIZED_EDITORS;
-          const btnManageEditors = document.getElementById('btnManageEditors');
-          if (btnManageEditors) {
-              btnManageEditors.style.display = (email === 'dwieachmad14@gmail.com') ? 'flex' : 'none';
-          }
           
           if (userEmail) {
              userEmail.innerHTML = `${currentUser.email} ${isAllowed ? '<span style="background: rgba(52,211,153,0.2); color: #34d399; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; font-weight:600;">Editor</span>' : '<span style="background: rgba(251,191,36,0.2); color: #fbbf24; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; font-weight:600;">View Only</span>'}`;
+          }
+          if (btnSettings) {
+             btnSettings.style.display = isAllowed ? 'flex' : 'none';
           }
        } else {
           window.hasEditPermission = false;
           if (userEmail) {
              userEmail.innerHTML = '';
+          }
+          if (btnSettings) {
+             btnSettings.style.display = 'none';
           }
        }
 
@@ -1536,10 +1472,6 @@
 
        authApp = initializeApp(config);
        auth = getAuth(authApp);
-       authDb = getFirestore(authApp, config.firestoreDatabaseId);
-       window.authDb = authDb;
-       window.auth = auth;
-       window.AUTHORIZED_EDITORS = AUTHORIZED_EDITORS;
 
        const provider = new GoogleAuthProvider();
        provider.addScope('https://www.googleapis.com/auth/spreadsheets');
@@ -1550,30 +1482,10 @@
        const userInfo = document.getElementById('userInfo');
 
        onAuthStateChanged(auth, (user) => {
-
-        if (user) {
-           btnSignIn.style.display = 'none';
-           userInfo.style.display = 'flex';
-           
-           if (authDb) {
-              onSnapshot(collection(authDb, 'editors'), (snapshot) => {
-                 let fetchedEditors = [];
-                 snapshot.forEach(doc => {
-                    if (doc.data().email) fetchedEditors.push(doc.data().email.toLowerCase());
-                 });
-                 // Merge with default static list and unique
-                 let merged = ["dwieachmad14@gmail.com", "vibescoding@gmail.com", "vibescoding.id@gmail.com", "owner@vibescoding.com", "admin@vibescoding.com", ...fetchedEditors];
-                 AUTHORIZED_EDITORS = [...new Set(merged)];
-                 
-                 // Render Modal UI for setting up editors if owner
-                 window.updateUIPermissions();
-                 if (document.getElementById('modalManageEditors').style.display === 'flex') {
-                     window.renderEditorsModal();
-                 }
-              });
-           }
-        } else {
-
+         if (user) {
+            btnSignIn.style.display = 'none';
+            userInfo.style.display = 'flex';
+         } else {
             btnSignIn.style.display = 'inline-flex';
             userInfo.style.display = 'none';
             cachedAccessToken = null;
@@ -1597,12 +1509,12 @@
                 loadFromSheets();
              }
           } catch(e) {
-             console.error("Sign in failed detailed:", e);
              const isIframe = window.self !== window.top;
+             let isCancelled = false;
              let userExplanation = "Kesalahan autentikasi.";
              
-             if (e.code === 'auth/cancelled-popup-request' || e.message?.includes('cancelled-popup-request')) {
-                userExplanation = "Proses login dibatalkan atau terhalang popup blocker.";
+             if (e.code === 'auth/cancelled-popup-request' || e.message?.includes('cancelled-popup-request') || e.code === 'auth/popup-closed-by-user' || e.message?.includes('popup-closed-by-user')) {
+                isCancelled = true;
              } else if (e.code === 'auth/popup-blocked' || e.message?.includes('popup-blocked')) {
                 userExplanation = "Popup diblokir oleh browser. Harap izinkan popup.";
              } else if (e.message && e.message.includes('Pending promise was never set')) {
@@ -1613,10 +1525,13 @@
                 userExplanation = "Kesalahan autentikasi: " + e.message;
              }
              
-             if (isIframe) {
-                window.showToast("💡 Hubungkan lewat Tab Baru! " + userExplanation + " Silakan klik tombol 'Buka di Tab Baru' (Open in New Tab) di kanan atas preview AI Studio Anda agar Google Login berjalan lancar.");
-             } else {
-                window.showToast("Gagal Login: " + userExplanation + " Pastikan koneksi internet stabil dan pop-up diizinkan.");
+             if (!isCancelled) {
+                console.error("Sign in failed detailed:", e);
+                if (isIframe) {
+                   window.showToast("💡 Hubungkan lewat Tab Baru! " + userExplanation + " Silakan klik tombol 'Buka di Tab Baru' di kanan atas preview.");
+                } else {
+                   window.showToast("Gagal Login: " + userExplanation + " Pastikan koneksi internet stabil dan pop-up diizinkan.");
+                }
              }
           } finally {
              isSigningIn = false;
@@ -1633,6 +1548,49 @@
        });
 
        btnRefresh.addEventListener('click', loadFromSheets);
+
+       const btnSettings = document.getElementById('btnSettings');
+       const accessModal = document.getElementById('accessModal');
+       const btnAccessCancel = document.getElementById('btnAccessCancel');
+       const btnAccessSave = document.getElementById('btnAccessSave');
+       const accessEmailsArea = document.getElementById('accessEmailsArea');
+
+       if (btnSettings) {
+          btnSettings.addEventListener('click', () => {
+             const currentEmails = getAuthorizedEditors();
+             accessEmailsArea.value = currentEmails.join('\n');
+             accessModal.classList.add('active');
+          });
+       }
+
+       if (btnAccessCancel) {
+          btnAccessCancel.addEventListener('click', () => {
+             accessModal.classList.remove('active');
+          });
+       }
+
+       if (btnAccessSave) {
+          btnAccessSave.addEventListener('click', () => {
+             const lines = accessEmailsArea.value.split(/\n|,/);
+             const validEmails = lines
+                .map(e => e.trim().toLowerCase())
+                .filter(e => e.length > 0 && e.includes('@'));
+             
+             // Extract unique
+             const uniqueEmails = [...new Set(validEmails)];
+             
+             if (uniqueEmails.length === 0) {
+                 window.showToast("Daftar email kosong, kembali ke default.");
+                 localStorage.removeItem('authorized_editors');
+             } else {
+                 localStorage.setItem('authorized_editors', JSON.stringify(uniqueEmails));
+                 window.showToast("Daftar email berhasil diperbarui.");
+             }
+             
+             accessModal.classList.remove('active');
+             window.updateUIPermissions(); // refresh permissions ui
+          });
+       }
 
        const btnSaveChanges = document.getElementById('btnSaveChanges');
        if (btnSaveChanges) {
