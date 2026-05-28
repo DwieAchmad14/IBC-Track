@@ -1,0 +1,21 @@
+{
+  "entities": {
+    "Editor": {
+      "title": "Editor",
+      "description": "Authorized editor email.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["email", "addedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "editors/{editorId}": {
+      "schema": { "$ref": "#/entities/Editor" },
+      "description": "Authorized editors registry"
+    }
+  }
+}

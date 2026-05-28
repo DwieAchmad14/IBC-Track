@@ -422,6 +422,22 @@
     }
 
     /* Action Buttons */
+    .sort-btn {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 4px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .sort-btn:hover {
+      background: #e2e8f0;
+    }
     .action-btn {
       display: inline-flex;
       align-items: center;
@@ -458,13 +474,53 @@
     .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
     .btn-cancel { background: var(--bg); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); }
     .btn-primary { background: var(--steel); border: 1px solid var(--steel); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: white; }
+    @keyframes pulse-dot {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulsing-dot {
+      animation: pulse-dot 1.5s infinite;
+    }
   </style>
 </head>
 <body>
 
   <header class="header">
-    <i data-lucide="layout-dashboard" style="width:28px;height:28px;"></i>
-    <h1>IBC Track AI <span style="font-weight:400; opacity:0.75; font-size:1rem; margin-left:12px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px;">Sistem Kontrol & Monitoring Status Tangki IBC/Lexam Industri</span></h1>
+    <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1;">
+      <i data-lucide="layout-dashboard" style="width:28px;height:28px;"></i>
+      <h1>IBC Track AI <span style="font-weight:400; opacity:0.75; font-size:1rem; margin-left:12px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px;">Sistem Kontrol & Monitoring Status Tangki IBC/Lexam Industri</span></h1>
+    </div>
+    
+    <div id="authContainer" style="display: flex; align-items: center; gap: 12px;">
+      <button id="btnRefresh" style="background: white; border: none; color: #1e293b; padding: 0 12px; height: 36px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Refresh Data
+      </button>
+
+      <button id="btnSaveChanges" style="background: #10b981; border: none; color: white; padding: 0 12px; height: 36px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; display: none; align-items: center; gap: 6px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1); transition: all 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span id="btnSaveText">Simpan Perubahan</span>
+        <span id="btnSaveDot" style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; margin-left: 2px;"></span>
+      </button>
+
+      <!-- Sign in Button will be injected here if not logged in -->
+      <button id="btnGoogleSignIn" class="gsi-material-button" style="display: none; background: white; border: none; height: 36px; border-radius: 4px; padding: 0 12px; cursor: pointer; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: #3c4043; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);">
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width: 18px; height: 18px;">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+          <path fill="none" d="M0 0h48v48H0z"></path>
+        </svg>
+        Sign in with Google
+      </button>
+      <div id="userInfo" style="display: none; align-items: center; gap: 12px; font-size: 13px;">
+        <button id="btnManageEditors" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; display: none; align-items: center; gap: 6px;">Kelola Editor</button>
+        <span id="userEmail" style="font-weight: 500; display: flex; align-items: center;"></span>
+        <button id="btnSignOut" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Sign Out</button>
+      </div>
+    </div>
   </header>
 
   <div class="container">
@@ -512,6 +568,8 @@
         <i data-lucide="table-2" style="width:18px;height:18px;"></i>
         Monitoring Daftar Tangki Interaktif
       </div>
+      <div style="display: flex; gap: 8px; flex-grow: 1; justify-content: center;">
+      </div>
       <div class="filter-group">
         <button class="filter-btn active" data-filter="all">Tampilkan Semua</button>
         <button class="filter-btn" data-filter="kritis" data-active-class="active-danger">Kritis / Perbaikan Fisik</button>
@@ -535,7 +593,7 @@
             <th style="min-width: 120px;">Posisi</th>
             <th style="min-width: 180px;">Keterangan Tambahan</th>
             <th style="min-width: 180px;">Status Saat Ini</th>
-            <th style="min-width: 100px; text-align: center;">Aksi</th>
+            <th class="action-col" style="min-width: 100px; text-align: center;">Aksi</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -562,6 +620,35 @@
     </div>
   </div>
 
+  <div id="modalManageEditors" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header" style="justify-content: space-between; border-bottom: none; padding-bottom: 0;">
+        <h2 style="font-size: 18px; margin: 0;">Kelola Akses Editor</h2>
+        <button class="close-btn" onclick="document.getElementById('modalManageEditors').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light);">&times;</button>
+      </div>
+      <div class="modal-body" style="padding-top: 8px;">
+        <p style="margin-top: 0; color: var(--text-light); font-size: 13px;">Daftarkan email yang diizinkan untuk mengedit data ini.</p>
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <input type="email" id="newEditorEmail" placeholder="Masukkan Email SSO Google" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" />
+          <button id="btnAddEditorConfirm" style="background: var(--primary); color: white; border: none; padding: 0 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Tambah</button>
+        </div>
+        <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-height: 300px; overflow-y: auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align: left;">
+            <thead style="background: var(--bg); position: sticky; top: 0;">
+              <tr>
+                <th style="padding: 10px 12px; border-bottom: 1px solid var(--border);">Email</th>
+                <th style="padding: 10px 12px; border-bottom: 1px solid var(--border); width: 80px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="editorsListBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Initialize Lucide Icons
     lucide.createIcons();
@@ -569,6 +656,7 @@
     // Formulir Data Penuh (Mulai dari Kosong)
     let dummyData = [];
     window.columnFilters = {};
+    window.hasEditPermission = false;
 
     // Functions
     window.initFilters = function() {
@@ -640,6 +728,10 @@
       const isAllSelected = !window.columnFilters[colIdx] || window.columnFilters[colIdx].size === uniqueValues.size;
       
       let html = `
+        <div style="border-bottom: 1px solid var(--border); margin-bottom: 8px; padding-bottom: 8px; display: flex; gap: 4px; justify-content: space-between;">
+           <button type="button" class="sort-btn" onclick="sortTable(event, ${colIdx}, 'asc')">A-Z</button>
+           <button type="button" class="sort-btn" onclick="sortTable(event, ${colIdx}, 'desc')">Z-A</button>
+        </div>
         <label class="filter-item" style="font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;">
           <input type="checkbox" onchange="toggleSelectAll(${colIdx}, this)" ${isAllSelected ? 'checked' : ''}>
           Pilih Semua
@@ -659,6 +751,30 @@
       });
 
       dropdown.innerHTML = html;
+    };
+
+    window.sortTable = function(event, colIdx, direction) {
+      event.stopPropagation();
+      const tbody = document.getElementById('tableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      
+      rows.sort((a, b) => {
+         let valA = window.getCellValue(a, colIdx).toLowerCase();
+         let valB = window.getCellValue(b, colIdx).toLowerCase();
+
+         const numA = parseFloat(valA);
+         const numB = parseFloat(valB);
+         if (!isNaN(numA) && !isNaN(numB) && valA === numA.toString() && valB === numB.toString()) {
+            return direction === 'asc' ? numA - numB : numB - numA;
+         }
+         
+         if (valA < valB) return direction === 'asc' ? -1 : 1;
+         if (valA > valB) return direction === 'asc' ? 1 : -1;
+         return 0;
+      });
+      
+      rows.forEach(tr => tbody.appendChild(tr));
+      document.querySelectorAll('.filter-dropdown').forEach(el => el.classList.remove('show'));
     };
 
     window.toggleSelectAll = function(colIdx, checkbox) {
@@ -738,25 +854,35 @@
     };
 
     window.handleAddRow = function(btn) {
-      showConfirm("Tambah Baris", "Tambahkan baris baru tepat di bawah ini?", () => {
-         const currentRow = btn.closest('tr');
-         const item = { no: "", tglCleaning: "", perlakuan: "", sanitasi: "", estClean: "", tglKirim: "", statusInfo: "", peruntukkan: "", posisi: "", keterangan: "", statusSaatIni: "TIDAK TERJADWAL" };
-         const newRow = window.createRowElement(item);
-         currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
-         lucide.createIcons();
-      });
+       if (!window.hasEditPermission) {
+          showToast("Akses ditolak: Anda tidak memiliki izin untuk mengedit.");
+          return;
+       }
+       showConfirm("Tambah Baris", "Tambahkan baris baru tepat di bawah ini?", () => {
+          const currentRow = btn.closest('tr');
+          const item = { no: "", tglCleaning: "", perlakuan: "", sanitasi: "", estClean: "", tglKirim: "", statusInfo: "", peruntukkan: "", posisi: "", keterangan: "", statusSaatIni: "TIDAK TERJADWAL" };
+          const newRow = window.createRowElement(item);
+          currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
+          lucide.createIcons();
+          if (window.triggerAutoSave) window.triggerAutoSave();
+       });
     };
 
     window.handleDeleteRow = function(btn) {
-      const tbody = document.getElementById('tableBody');
-      if (tbody.querySelectorAll('tr').length <= 1) {
-         showToast("Tabel tidak bisa dihapus jika hanya tersisa 1 baris!");
-         return;
-      }
-      showConfirm("Hapus Baris", "Apakah Anda yakin ingin menghapus baris ini?", () => {
-         const currentRow = btn.closest('tr');
-         currentRow.remove();
-      });
+       if (!window.hasEditPermission) {
+          showToast("Akses ditolak: Anda tidak memiliki izin untuk mengedit.");
+          return;
+       }
+       const tbody = document.getElementById('tableBody');
+       if (tbody.querySelectorAll('tr').length <= 1) {
+          showToast("Tabel tidak bisa dihapus jika hanya tersisa 1 baris!");
+          return;
+       }
+       showConfirm("Hapus Baris", "Apakah Anda yakin ingin menghapus baris ini?", () => {
+          const currentRow = btn.closest('tr');
+          currentRow.remove();
+          if (window.triggerAutoSave) window.triggerAutoSave();
+       });
     };
 
     window.showToast = function(message) {
@@ -791,15 +917,37 @@
       let computedStatus = "TIDAK AMAN CEK ULANG KEMBALI"; // Default
 
       const tglVal = tglInput.value.trim();
-      const estVal = estInput.value.trim();
       const sanitasiInput = tr.querySelector('.field-sanitasi');
 
+      let computedEstClean = "Tidak Terjadwal";
+      if (tglVal) {
+        const tDate = new Date(tglVal);
+        if (!isNaN(tDate.getTime())) {
+           // We can also compute estClean directly 
+           const eDate = new Date(tDate);
+           eDate.setDate(eDate.getDate() + 7);
+           const cy = eDate.getFullYear();
+           const cm = String(eDate.getMonth() + 1).padStart(2, '0');
+           const cd = String(eDate.getDate()).padStart(2, '0');
+           computedEstClean = `${cd}/${cm}/${cy}`;
+        }
+      }
+
+      if (estInput.tagName === 'INPUT') { // Normal text input we created
+         estInput.value = computedEstClean;
+      } else {
+         // Fallback if it's the old date picker wrapper, though it should be replaced
+         const dateTxt = estInput.closest('td').querySelector('.date-text');
+         if (dateTxt) dateTxt.value = computedEstClean;
+      }
+      
       if (!tglVal) {
         computedStatus = "TIDAK TERJADWAL";
-      } else if (estVal) {
+      } else {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const estDate = new Date(estVal);
+        const estDate = new Date(tglVal);
+        estDate.setDate(estDate.getDate() + 7);
         if (!isNaN(estDate.getTime()) && today < estDate) {
           computedStatus = "AMAN DIPAKAI";
         }
@@ -883,6 +1031,13 @@
           textVal = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
       }
+      if (!window.hasEditPermission) {
+        return `
+          <div class="date-cell-wrapper" style="display: flex; align-items: center; gap: 4px; position: relative;">
+            <input type="text" class="cell-input date-text" value="${textVal}" placeholder="DD/MM/YYYY" readonly style="min-width: 90px; text-align: center; cursor: default; pointer-events: none;">
+          </div>
+        `;
+      }
       return `
         <div class="date-cell-wrapper" style="display: flex; align-items: center; gap: 4px; position: relative;">
           <input type="text" class="cell-input date-text" value="${textVal}" placeholder="DD/MM/YYYY" onblur="syncToDateOverlay(this)" style="min-width: 90px; padding-right: 20px;">
@@ -929,12 +1084,14 @@
       }
       lucide.createIcons();
       window.runFilters();
+      if (window.updateUIPermissions) window.updateUIPermissions();
     }
 
     window.createRowElement = function(item) {
         let computedStatus = "TIDAK AMAN CEK ULANG KEMBALI"; // Default
 
         let computedSanitasi = "";
+        let computedEstClean = "Tidak Terjadwal";
         if (item.tglCleaning && item.tglCleaning.trim() !== '') {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -949,18 +1106,27 @@
             else if (diffDays < 21) computedSanitasi = "Sanitasi ke-2";
             else if (diffDays < 28) computedSanitasi = "Sanitasi ke-3";
             else computedSanitasi = "Cleaning total";
+            
+            const estDate = new Date(item.tglCleaning);
+            estDate.setDate(estDate.getDate() + 7);
+            const cy = estDate.getFullYear();
+            const cm = String(estDate.getMonth() + 1).padStart(2, '0');
+            const cd = String(estDate.getDate()).padStart(2, '0');
+            computedEstClean = `${cd}/${cm}/${cy}`;
           }
         }
         item.sanitasi = computedSanitasi;
+        item.estClean = computedEstClean;
 
         if (!item.tglCleaning || item.tglCleaning.trim() === '') {
           computedStatus = "TIDAK TERJADWAL";
-        } else if (item.estClean && item.estClean.trim() !== '') {
+        } else {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const estDate = new Date(item.estClean);
-          if (!isNaN(estDate.getTime())) {
-            if (today < estDate) {
+          const evalEstDate = new Date(item.tglCleaning);
+          evalEstDate.setDate(evalEstDate.getDate() + 7);
+          if (!isNaN(evalEstDate.getTime())) {
+            if (today < evalEstDate) {
               computedStatus = "AMAN DIPAKAI";
             }
           }
@@ -999,30 +1165,58 @@
         else if (statNow.includes('aman') && !statNow.includes('tidak aman')) statNowBadge = 'badge-success';
         else if (statNow.includes('tidak terjadwal')) statNowBadge = 'badge-warning';
 
-        tr.innerHTML = `
-          <td><input type="text" class="cell-input" style="font-family: var(--f-mono); font-weight: 700; color: var(--steel);" value="${item.no || ''}"></td>
-          <td>${renderDateInput(item.tglCleaning || '', 'field-tglCleaning')}</td>
-          <td><input type="text" class="cell-input" value="${item.perlakuan || ''}"></td>
-          <td><input type="text" class="cell-input field-sanitasi" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.sanitasi || ''}"></td>
-          <td>${renderDateInput(item.estClean || '', 'field-estClean')}</td>
-          <td>${renderDateInput(item.tglKirim || '', 'field-tglKirim')}</td>
-          <td><div class="badge ${statusBadge}"><input type="text" class="badge-input" value="${info}"></div></td>
-          <td><input type="text" class="cell-input" value="${item.peruntukkan || ''}"></td>
-          <td><input type="text" class="cell-input" value="${item.posisi || ''}"></td>
-          <td><input type="text" class="cell-input" value="${item.keterangan || ''}"></td>
-          <td><div class="badge ${statNowBadge} field-statusSaatIni-container"><input type="text" class="badge-input field-statusSaatIni" value="${item.statusSaatIni}" readonly style="cursor: default; pointer-events: none;"></div></td>
-          <td>
-            <div style="display: flex; gap: 8px; justify-content: center;">
-              <button class="action-btn btn-add" title="Tambah Baris" onclick="handleAddRow(this)"><i data-lucide="plus" style="width: 14px; height: 14px;"></i></button>
-              <button class="action-btn btn-delete" title="Hapus Baris" onclick="handleDeleteRow(this)"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
-            </div>
-          </td>
-        `;
+        if (!window.hasEditPermission) {
+          tr.innerHTML = `
+            <td><input type="text" class="cell-input" style="font-family: var(--f-mono); font-weight: 700; color: var(--steel); cursor: default;" readonly value="${item.no || ''}"></td>
+            <td>${renderDateInput(item.tglCleaning || '', 'field-tglCleaning')}</td>
+            <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.perlakuan || ''}"></td>
+            <td><input type="text" class="cell-input field-sanitasi" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.sanitasi || ''}"></td>
+            <td><input type="text" class="cell-input field-estClean" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.estClean || ''}"></td>
+            <td>${renderDateInput(item.tglKirim || '', 'field-tglKirim')}</td>
+            <td><div class="badge ${statusBadge}"><input type="text" class="badge-input" readonly style="cursor: default;" value="${info}"></div></td>
+            <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.peruntukkan || ''}"></td>
+            <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.posisi || ''}"></td>
+            <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.keterangan || ''}"></td>
+            <td><div class="badge ${statNowBadge} field-statusSaatIni-container"><input type="text" class="badge-input field-statusSaatIni" value="${item.statusSaatIni}" readonly style="cursor: default; pointer-events: none;"></div></td>
+            <td class="action-col" style="display: none;"><div style="text-align: center; color: var(--text-muted);">-</div></td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td><input type="text" class="cell-input" style="font-family: var(--f-mono); font-weight: 700; color: var(--steel);" value="${item.no || ''}"></td>
+            <td>${renderDateInput(item.tglCleaning || '', 'field-tglCleaning')}</td>
+            <td><input type="text" class="cell-input" value="${item.perlakuan || ''}"></td>
+            <td><input type="text" class="cell-input field-sanitasi" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.sanitasi || ''}"></td>
+            <td><input type="text" class="cell-input field-estClean" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.estClean || ''}"></td>
+            <td>${renderDateInput(item.tglKirim || '', 'field-tglKirim')}</td>
+            <td><div class="badge ${statusBadge}"><input type="text" class="badge-input" value="${info}"></div></td>
+            <td><input type="text" class="cell-input" value="${item.peruntukkan || ''}"></td>
+            <td><input type="text" class="cell-input" value="${item.posisi || ''}"></td>
+            <td><input type="text" class="cell-input" value="${item.keterangan || ''}"></td>
+            <td><div class="badge ${statNowBadge} field-statusSaatIni-container"><input type="text" class="badge-input field-statusSaatIni" value="${item.statusSaatIni}" readonly style="cursor: default; pointer-events: none;"></div></td>
+            <td class="action-col">
+              <div style="display: flex; gap: 8px; justify-content: center;">
+                <button class="action-btn btn-add" title="Tambah Baris" onclick="handleAddRow(this)"><i data-lucide="plus" style="width: 14px; height: 14px;"></i></button>
+                <button class="action-btn btn-delete" title="Hapus Baris" onclick="handleDeleteRow(this)"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
+              </div>
+            </td>
+          `;
+        }
         return tr;
     };
 
     // Attach Event Listeners
     function attachListeners() {
+      // AutoSave Listener
+      const tableBody = document.getElementById('tableBody');
+      if (tableBody) {
+        tableBody.addEventListener('input', () => {
+          if (window.triggerAutoSave) window.triggerAutoSave();
+        });
+        tableBody.addEventListener('change', () => {
+          if (window.triggerAutoSave) window.triggerAutoSave();
+        });
+      }
+
       // Data filtering
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1122,6 +1316,515 @@
       attachListeners();
     });
 
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const btnManageEditors = document.getElementById('btnManageEditors');
+        if (btnManageEditors) {
+            btnManageEditors.addEventListener('click', () => {
+                document.getElementById('modalManageEditors').style.display = 'flex';
+                renderEditorsModal();
+            });
+        }
+        
+        const btnAddEditorConfirm = document.getElementById('btnAddEditorConfirm');
+        if (btnAddEditorConfirm) {
+            btnAddEditorConfirm.addEventListener('click', async () => {
+                const emailInput = document.getElementById('newEditorEmail');
+                const val = emailInput.value.trim().toLowerCase();
+                if(!val || val.indexOf('@')===-1) return alert('Email tidak valid');
+                
+                try {
+                    let docId = val.replace(/[^a-zA-Z0-9_-]/g, '_');
+                    await window.firebaseSetDoc(window.firebaseDoc(window.authDb, 'editors', docId), {
+                        email: val,
+                        addedBy: window.auth.currentUser.email,
+                        createdAt: Date.now()
+                    });
+                    emailInput.value = '';
+                    window.showToast("Editor berhasil ditambahkan!");
+                } catch(e) {
+                    console.error(e);
+                    alert("Gagal menambahkan: " + e.message);
+                }
+            });
+        }
+    });
+
+    window.removeEditor = async function(docId) {
+        if(!confirm('Hapus editor ini?')) return;
+        try {
+            await window.firebaseDeleteDoc(window.firebaseDoc(window.authDb, 'editors', docId));
+            window.showToast("Editor berhasil dihapus!");
+        } catch(e) {
+            console.error(e);
+            alert("Gagal menghapus: " + e.message);
+        }
+    };
+
+    window.renderEditorsModal = function() {
+        const body = document.getElementById('editorsListBody');
+        if(!body) return;
+        body.innerHTML = '';
+        
+        let uniqueEditors = [...new Set(window.AUTHORIZED_EDITORS)];
+        uniqueEditors.forEach(em => {
+            let tr = document.createElement('tr');
+            let isDefault = ["dwieachmad14@gmail.com", "vibescoding@gmail.com", "vibescoding.id@gmail.com", "owner@vibescoding.com", "admin@vibescoding.com"].includes(em);
+            
+            let actionBtn = isDefault ? '<span style="color:#aaa; font-size:11px;">Default</span>' : `<button onclick="window.removeEditor('${em.replace(/[^a-zA-Z0-9_-]/g, '_')}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>`;
+            
+            tr.innerHTML = `
+                <td style="padding:10px 12px; border-bottom:1px solid var(--border);">${em}</td>
+                <td style="padding:10px 12px; border-bottom:1px solid var(--border);">${actionBtn}</td>
+            `;
+            body.appendChild(tr);
+        });
+    };
+
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, onSnapshot, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let authApp = null;
+    let auth = null;
+    let cachedAccessToken = null;
+    window.firebaseSetDoc = setDoc;
+    window.firebaseDeleteDoc = deleteDoc;
+    window.firebaseDoc = doc;
+    const SPREADSHEET_ID = '1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng';
+
+    window.authDb = null;
+    let authDb = null;
+    let AUTHORIZED_EDITORS = [
+       "dwieachmad14@gmail.com",
+       "vibescoding@gmail.com",
+       "vibescoding.id@gmail.com",
+       "owner@vibescoding.com",
+       "admin@vibescoding.com"
+    ];
+
+    function parseCSV(text) {
+       let lines = [];
+       let row = [""];
+       let inQuotes = false;
+       for (let i = 0; i < text.length; i++) {
+          let c = text[i];
+          let next = text[i+1];
+          if (c === '"') {
+             if (inQuotes && next === '"') {
+                row[row.length - 1] += '"';
+                i++;
+             } else {
+                inQuotes = !inQuotes;
+             }
+          } else if (c === ',' && !inQuotes) {
+             row.push("");
+          } else if ((c === '\r' || c === '\n') && !inQuotes) {
+             if (c === '\r' && next === '\n') {
+                i++;
+             }
+             lines.push(row);
+             row = [""];
+          } else {
+             row[row.length - 1] += c;
+          }
+       }
+       if (row.length > 1 || row[0] !== "") {
+          lines.push(row);
+       }
+       return lines;
+    }
+
+    async function fetchFirebaseConfig() {
+       try {
+          const res = await fetch('/firebase-applet-config.json');
+          return await res.json();
+       } catch (e) {
+          console.error("No firebase config found", e);
+          return null;
+       }
+    }
+
+    window.hasUnsavedChanges = false;
+
+    window.markUnsavedChanges = function(hasUnsaved) {
+       window.hasUnsavedChanges = hasUnsaved;
+       const btnSave = document.getElementById('btnSaveChanges');
+       const btnSaveText = document.getElementById('btnSaveText');
+       const btnSaveDot = document.getElementById('btnSaveDot');
+       
+       if (btnSave && window.hasEditPermission) {
+          if (hasUnsaved) {
+             btnSave.style.background = '#f59e0b'; // amber/orange
+             if (btnSaveText) btnSaveText.innerText = 'Simpan Perubahan';
+             if (btnSaveDot) {
+                btnSaveDot.style.display = 'inline-block';
+                btnSaveDot.className = 'pulsing-dot';
+             }
+          } else {
+             btnSave.style.background = '#10b981'; // green
+             if (btnSaveText) btnSaveText.innerText = 'Sudah Disimpan';
+             if (btnSaveDot) {
+                btnSaveDot.style.display = 'none';
+                btnSaveDot.className = '';
+             }
+          }
+       }
+    };
+
+    window.updateUIPermissions = function() {
+       const currentUser = auth ? auth.currentUser : null;
+       const userEmail = document.getElementById('userEmail');
+       
+       if (currentUser && currentUser.email) {
+          const email = currentUser.email.toLowerCase();
+          const isAllowed = AUTHORIZED_EDITORS.includes(email) || 
+                            email.endsWith('@vibescoding.com') || 
+                            email.endsWith('@vibescoding.id');
+          
+          window.hasEditPermission = isAllowed;
+          window.AUTHORIZED_EDITORS = AUTHORIZED_EDITORS;
+          const btnManageEditors = document.getElementById('btnManageEditors');
+          if (btnManageEditors) {
+              btnManageEditors.style.display = (email === 'dwieachmad14@gmail.com') ? 'flex' : 'none';
+          }
+          
+          if (userEmail) {
+             userEmail.innerHTML = `${currentUser.email} ${isAllowed ? '<span style="background: rgba(52,211,153,0.2); color: #34d399; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; font-weight:600;">Editor</span>' : '<span style="background: rgba(251,191,36,0.2); color: #fbbf24; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; font-weight:600;">View Only</span>'}`;
+          }
+       } else {
+          window.hasEditPermission = false;
+          if (userEmail) {
+             userEmail.innerHTML = '';
+          }
+       }
+
+       // Show/hide btnSaveChanges
+       const btnSaveChanges = document.getElementById('btnSaveChanges');
+       if (btnSaveChanges) {
+          btnSaveChanges.style.display = window.hasEditPermission ? 'inline-flex' : 'none';
+          window.markUnsavedChanges(window.hasUnsavedChanges);
+       }
+
+       // Hide or show the action column head/cells
+       const actionHeaders = document.querySelectorAll('.action-col');
+       actionHeaders.forEach(el => {
+          el.style.display = window.hasEditPermission ? '' : 'none';
+       });
+
+       // Hide or show upload area
+       const uploadArea = document.getElementById('uploadArea');
+       if (uploadArea) {
+          uploadArea.style.display = window.hasEditPermission ? 'flex' : 'none';
+       }
+    };
+
+    async function initAuth() {
+       // Restore token from cache
+       cachedAccessToken = localStorage.getItem('google_sheets_token');
+
+       const config = await fetchFirebaseConfig();
+       if (!config) {
+          // No auth config - make sure to load anyway in public read-only mode!
+          window.updateUIPermissions();
+          loadFromSheets();
+          return;
+       }
+
+       authApp = initializeApp(config);
+       auth = getAuth(authApp);
+       authDb = getFirestore(authApp, config.firestoreDatabaseId);
+       window.authDb = authDb;
+       window.auth = auth;
+       window.AUTHORIZED_EDITORS = AUTHORIZED_EDITORS;
+
+       const provider = new GoogleAuthProvider();
+       provider.addScope('https://www.googleapis.com/auth/spreadsheets');
+
+       const btnSignIn = document.getElementById('btnGoogleSignIn');
+       const btnSignOut = document.getElementById('btnSignOut');
+       const btnRefresh = document.getElementById('btnRefresh');
+       const userInfo = document.getElementById('userInfo');
+
+       onAuthStateChanged(auth, (user) => {
+
+        if (user) {
+           btnSignIn.style.display = 'none';
+           userInfo.style.display = 'flex';
+           
+           if (authDb) {
+              onSnapshot(collection(authDb, 'editors'), (snapshot) => {
+                 let fetchedEditors = [];
+                 snapshot.forEach(doc => {
+                    if (doc.data().email) fetchedEditors.push(doc.data().email.toLowerCase());
+                 });
+                 // Merge with default static list and unique
+                 let merged = ["dwieachmad14@gmail.com", "vibescoding@gmail.com", "vibescoding.id@gmail.com", "owner@vibescoding.com", "admin@vibescoding.com", ...fetchedEditors];
+                 AUTHORIZED_EDITORS = [...new Set(merged)];
+                 
+                 // Render Modal UI for setting up editors if owner
+                 window.updateUIPermissions();
+                 if (document.getElementById('modalManageEditors').style.display === 'flex') {
+                     window.renderEditorsModal();
+                 }
+              });
+           }
+        } else {
+
+            btnSignIn.style.display = 'inline-flex';
+            userInfo.style.display = 'none';
+            cachedAccessToken = null;
+            localStorage.removeItem('google_sheets_token');
+         }
+         window.updateUIPermissions();
+         loadFromSheets(); // Auto load data on load or state change
+       });
+
+       let isSigningIn = false;
+       btnSignIn.addEventListener('click', async () => {
+          if (isSigningIn) return;
+          isSigningIn = true;
+          try {
+             const result = await signInWithPopup(auth, provider);
+             const credential = GoogleAuthProvider.credentialFromResult(result);
+             if (credential && credential.accessToken) {
+                cachedAccessToken = credential.accessToken;
+                localStorage.setItem('google_sheets_token', cachedAccessToken);
+                window.updateUIPermissions();
+                loadFromSheets();
+             }
+          } catch(e) {
+             console.error("Sign in failed detailed:", e);
+             const isIframe = window.self !== window.top;
+             let userExplanation = "Kesalahan autentikasi.";
+             
+             if (e.code === 'auth/cancelled-popup-request' || e.message?.includes('cancelled-popup-request')) {
+                userExplanation = "Proses login dibatalkan atau terhalang popup blocker.";
+             } else if (e.code === 'auth/popup-blocked' || e.message?.includes('popup-blocked')) {
+                userExplanation = "Popup diblokir oleh browser. Harap izinkan popup.";
+             } else if (e.message && e.message.includes('Pending promise was never set')) {
+                 userExplanation = "Proses login sebelumnya belum selesai.";
+             } else if (e.code === 'auth/network-request-failed' || e.message?.includes('network-request-failed')) {
+                userExplanation = "Gagal menghubungi server autentikasi (karena pembatasan cookie pihak ketiga browser/iframe).";
+             } else {
+                userExplanation = "Kesalahan autentikasi: " + e.message;
+             }
+             
+             if (isIframe) {
+                window.showToast("💡 Hubungkan lewat Tab Baru! " + userExplanation + " Silakan klik tombol 'Buka di Tab Baru' (Open in New Tab) di kanan atas preview AI Studio Anda agar Google Login berjalan lancar.");
+             } else {
+                window.showToast("Gagal Login: " + userExplanation + " Pastikan koneksi internet stabil dan pop-up diizinkan.");
+             }
+          } finally {
+             isSigningIn = false;
+          }
+       });
+
+       btnSignOut.addEventListener('click', () => {
+          signOut(auth);
+          localStorage.removeItem('google_sheets_token');
+          cachedAccessToken = null;
+          window.hasEditPermission = false;
+          window.updateUIPermissions();
+          loadFromSheets();
+       });
+
+       btnRefresh.addEventListener('click', loadFromSheets);
+
+       const btnSaveChanges = document.getElementById('btnSaveChanges');
+       if (btnSaveChanges) {
+          btnSaveChanges.addEventListener('click', async () => {
+             if (btnSaveChanges.disabled) return;
+             btnSaveChanges.disabled = true;
+             const btnSaveText = document.getElementById('btnSaveText');
+             if (btnSaveText) btnSaveText.innerText = "Menyimpan...";
+             
+             window.showToast("Menyimpan data ke Google Sheets...");
+             
+             try {
+                const success = await window.autoSaveToSheets();
+                if (success !== false) {
+                   window.markUnsavedChanges(false);
+                   window.showToast("Data berhasil disimpan ke Google Sheets!");
+                }
+             } catch(e) {
+                console.error("Manual save failed:", e);
+                window.showToast("Gagal menyimpan data: " + e.message);
+             } finally {
+                btnSaveChanges.disabled = false;
+                window.markUnsavedChanges(window.hasUnsavedChanges);
+              }
+           });
+        }
+     }
+
+    async function loadFromSheets() {
+       window.showToast("Mengunduh data dari Google Sheets...");
+       try {
+          let rows = [];
+
+          const headers = {};
+          if (cachedAccessToken) {
+             headers["Authorization"] = `Bearer ${cachedAccessToken}`;
+          }
+
+          const res = await fetch(`/api/sheets/load?spreadsheetId=${SPREADSHEET_ID}`, {
+             headers: headers
+          });
+
+          if (!res.ok) {
+             throw new Error("Gagal menghubungi server proxy.");
+          }
+
+          const responseData = await res.json();
+          if (responseData.source === "public_csv_raw") {
+             rows = parseCSV(responseData.rawCsv);
+             if (rows.length > 0) {
+                const firstCol = rows[0][0] || "";
+                if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
+                   rows.shift();
+                }
+              }
+          } else if (responseData.values) {
+              rows = responseData.values;
+          } else {
+              throw new Error(responseData.error || "Gagal mendapatkan data sheet.");
+          }
+
+          if (false) { // bypassed-old-auth-fetch
+             console.log("Fetching from Google Sheets API with Access Token...");
+             const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A2:O`, {
+                headers: { Authorization: `Bearer ${cachedAccessToken}` }
+             });
+             
+             if (!res.ok) {
+                console.warn("Authenticated fetch failed, trying public CSV fetch fallback...", res.statusText);
+                const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`);
+                if (!csvRes.ok) throw new Error("Gagal mengunduh sheet publik maupun terautentikasi.");
+                const csvText = await csvRes.text();
+                rows = parseCSV(csvText);
+                if (rows.length > 0) {
+                   const firstCol = rows[0][0] || "";
+                   if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
+                      rows.shift();
+                   }
+                }
+             } else {
+                const result = await res.json();
+                rows = result.values || [];
+             }
+          } else if (false) { // bypassed-old-public-fetch
+             console.log("Non-authenticated, fetching public CSV export URL...");
+             const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`);
+             if (!csvRes.ok) {
+                throw new Error("Gagal mengunduh Google Sheets publik (pastikan status link sharing 'Siapa saja dengan link dapat melihat' aktif).");
+             }
+             const csvText = await csvRes.text();
+             rows = parseCSV(csvText);
+             if (rows.length > 0) {
+                const firstCol = rows[0][0] || "";
+                if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
+                   rows.shift();
+                }
+             }
+          }
+          
+          const parseDate = (val) => {
+             if (!val) return "";
+             if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+             if (val.match(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{4}$/)) {
+                const parts = val.split(/[\/\-.]/);
+                const d = parts[0].padStart(2, '0');
+                const m = parts[1].padStart(2, '0');
+                return `${parts[2]}-${m}-${d}`;
+             }
+             return val;
+          };
+
+          dummyData = rows.map(row => ({
+             no: row[0] || "",
+             tglCleaning: parseDate(row[1]),
+             perlakuan: row[2] || "",
+             sanitasi: row[3] || "",
+             estClean: parseDate(row[4]),
+             tglKirim: parseDate(row[5]),
+             statusInfo: row[6] || "",
+             peruntukkan: row[7] || "",
+             posisi: row[8] || "",
+             keterangan: row[9] || "",
+             statusSaatIni: row[10] || "TIDAK TERJADWAL"
+          }));
+          
+          window.calculateStats();
+          window.renderTable();
+          window.showToast("Data berhasil dimuat dari Google Sheets!");
+       } catch(e) {
+          console.error("Error loading sheets:", e);
+          window.showToast("Gagal memuat: " + e.message);
+       }
+    }
+
+    let saveTimeout = null;
+    
+    window.autoSaveToSheets = async function() {
+       if (!cachedAccessToken || !window.hasEditPermission) return false;
+       
+       const tbody = document.getElementById('tableBody');
+       const rows = Array.from(tbody.querySelectorAll('tr'));
+       const values = [];
+       
+       rows.forEach(tr => {
+          if (rows.length === 1 && !window.getCellValue(tr, 0)) return;
+          values.push([
+             window.getCellValue(tr, 0), window.getCellValue(tr, 1), window.getCellValue(tr, 2),
+             window.getCellValue(tr, 3), window.getCellValue(tr, 4), window.getCellValue(tr, 5),
+             window.getCellValue(tr, 6), window.getCellValue(tr, 7), window.getCellValue(tr, 8),
+             window.getCellValue(tr, 9), window.getCellValue(tr, 10)
+          ]);
+       });
+       if(values.length === 0) values.push(["", "", "", "", "", "", "", "", "", "", ""]); 
+       
+       try {
+          const res = await fetch(`/api/sheets/save`, {
+             method: "POST",
+             headers: {
+                "Authorization": `Bearer ${cachedAccessToken}`,
+                "Content-Type": "application/json"
+             },
+             body: JSON.stringify({
+                spreadsheetId: SPREADSHEET_ID,
+                values: values
+             })
+          });
+          
+          if (!res.ok) {
+             const errText = await res.json().catch(() => ({ error: "Gagal menyimpan." }));
+             throw new Error(errText.error || "Gagal menyimpan melalui proxy.");
+          }
+          return true;
+       } catch(e) {
+          console.error("Save failure:", e);
+          throw e;
+       }
+    };
+
+    window.triggerAutoSave = function() {
+       if (!window.hasEditPermission) return;
+       window.markUnsavedChanges(true);
+    };
+
+    window.addEventListener('beforeunload', (e) => {
+       if (window.hasUnsavedChanges && window.hasEditPermission) {
+          e.preventDefault();
+          e.returnValue = 'Ada perubahan yang belum disimpan. Yakin ingin meninggalkan halaman ini?';
+          return e.returnValue;
+       }
+    });
+
+    initAuth();
   </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import multer from "multer";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
@@ -11,6 +12,15 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  app.get("/firebase-applet-config.json", (req, res) => {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      res.sendFile(configPath);
+    } else {
+      res.status(404).json({ error: "Firebase config not found" });
+    }
+  });
 
   // AI Pipeline for CSV mapping
   app.post("/api/upload-csv", upload.single("file"), async (req, res) => {
@@ -100,6 +110,103 @@ Output only the matched raw rows based on the CSV data provided as a JSON array 
     } catch (err: any) {
       console.error(err);
       res.status(500).json({ error: err.message || "Failed to process CSV via AI" });
+    }
+  });
+
+  // Google Sheets LOAD proxy route
+  app.get("/api/sheets/load", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      const spreadsheetId = req.query.spreadsheetId || "1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng";
+      let rows: any[] = [];
+      let source = "none";
+
+      if (authHeader) {
+        console.log("Fetching authenticated Sheets API via server-side proxy...");
+        const apiRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:O`, {
+          headers: { "Authorization": authHeader }
+        });
+
+        if (apiRes.ok) {
+          const result = await apiRes.json();
+          rows = result.values || [];
+          source = "authenticated_api";
+        } else {
+          const errText = await apiRes.text();
+          console.warn("Authenticated API fetch failed. Status:", apiRes.status, "Error:", errText);
+        }
+      }
+
+      // If auth fetch failed/empty or wasn't provided, fetch public CSV fallback
+      if (rows.length === 0) {
+        console.log("Fetching public CSV export URL via server-side proxy...");
+        const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`);
+        if (csvRes.ok) {
+          const csvText = await csvRes.text();
+          return res.json({ success: true, source: "public_csv_raw", rawCsv: csvText });
+        } else {
+          console.error("Public CSV export failed. Status:", csvRes.status);
+          return res.status(500).json({ error: "Gagal memuat Google Sheet secara privat maupun publik." });
+        }
+      }
+
+      return res.json({ success: true, source, values: rows });
+    } catch (error: any) {
+      console.error("Server proxy load error:", error);
+      return res.status(500).json({ error: error.message || "Failed to load sheets via proxy" });
+    }
+  });
+
+  // Google Sheets SAVE proxy route
+  app.post("/api/sheets/save", async (req, res) => {
+    try {
+      const { values, spreadsheetId } = req.body;
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ error: "Unauthorized: Missing access token" });
+      }
+
+      const sid = spreadsheetId || "1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng";
+
+      // 1. Clear cells A2:Z
+      console.log("Clearing sheets A2:Z via server-side proxy...");
+      const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/A2:Z:clear`, {
+        method: "POST",
+        headers: {
+          "Authorization": authHeader,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!clearRes.ok) {
+        const clearErr = await clearRes.text();
+        console.error("Clear error:", clearErr);
+        return res.status(clearRes.status).json({ error: `Gagal mengosongkan sheet: ${clearErr}` });
+      }
+
+      // 2. Append new values
+      console.log("Appending values to A2:K via server-side proxy...");
+      const params = new URLSearchParams({ valueInputOption: "USER_ENTERED", insertDataOption: "OVERWRITE" });
+      const appendRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/A2:K:append?${params.toString()}`, {
+        method: "POST",
+        headers: {
+          "Authorization": authHeader,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ values })
+      });
+
+      if (!appendRes.ok) {
+        const appendErr = await appendRes.text();
+        console.error("Append error:", appendErr);
+        return res.status(appendRes.status).json({ error: `Gagal menyisipkan data: ${appendErr}` });
+      }
+
+      const appendData = await appendRes.json();
+      return res.json({ success: true, data: appendData });
+    } catch (error: any) {
+      console.error("Server proxy save error:", error);
+      return res.status(500).json({ error: error.message || "Failed to save data to sheets via proxy" });
     }
   });
 
