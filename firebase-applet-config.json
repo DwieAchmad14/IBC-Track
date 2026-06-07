@@ -3,6 +3,7 @@
   "appId": "1:1098176829536:web:d3826c8d775c654b6a0b05",
   "apiKey": "AIzaSyDgLYZhvISahFLmpvlXPCNcS9u5ttHa5MQ",
   "authDomain": "dwieproject.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-ebf380ec-e643-4097-995b-8c2de37a5e78",
   "storageBucket": "dwieproject.firebasestorage.app",
   "messagingSenderId": "1098176829536",
   "measurementId": ""

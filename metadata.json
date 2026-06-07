@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "IBC Track AI",
+  "description": "Sistem kontrol dan monitoring status tangki IBC/Lexam industri dengan Firebase integration",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

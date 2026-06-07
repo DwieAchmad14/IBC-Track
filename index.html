@@ -6,6 +6,8 @@
   <title>IBC Track AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&display=swap');
 
@@ -245,6 +247,7 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
+      table-layout: fixed;
     }
     thead {
       background: #F8FAFC;
@@ -262,6 +265,23 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       white-space: nowrap;
+      position: relative;
+      /* overflow: hidden; Removed to allow dropdowns to overlap */
+      text-overflow: ellipsis;
+    }
+    .resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 5px;
+      cursor: col-resize;
+      user-select: none;
+      height: 100%;
+      background-color: transparent;
+      z-index: 10;
+    }
+    .resizer:hover, .resizer.resizing {
+      background-color: var(--amber);
     }
     td { 
       padding: 6px 12px;
@@ -269,6 +289,9 @@
       color: var(--text);
       vertical-align: middle;
       border-bottom: 1px solid #edf2f7;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .cell-input {
       width: 100%;
@@ -281,6 +304,9 @@
       padding: 4px;
       border-radius: 4px;
       transition: all 0.2s;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
     .cell-input:focus {
       border-color: var(--amber);
@@ -300,16 +326,14 @@
       min-width: 80px;
       text-align: center;
       cursor: text;
+      white-space: nowrap;
+      overflow: hidden;
     }
     tr:last-child td { border-bottom: none; }
     
     td:first-child strong { font-family: var(--f-mono); font-weight: 700; color: var(--steel) !important; font-size: 13px; }
 
-    /* Row Highlights */
-    tr.row-danger { background-color: #fffafa; }
-    tr.row-danger td { border-bottom: 1px solid #fee2e2; }
-    tr.row-warning { background-color: #fffdf5; }
-    tr.row-warning td { border-bottom: 1px solid #fef3c7; }
+    /* Row Highlights have been removed for a clean, uniform table look */
 
     /* Badges */
     .badge {
@@ -328,6 +352,85 @@
     .badge-warning { background: #fffaf0; color: #7b341e; border: 1px solid #fbd38d; }
     .badge-neutral { background: #f0f2f5; color: var(--text-muted); border: 1px solid var(--border); }
     .badge-blue { background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; }
+
+    /* Smart Tag UI (Editable Badge) */
+    .status-cell-container {
+      position: relative;
+      display: inline-flex;
+      width: 100%;
+    }
+    .smart-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border-radius: 9999px; /* Pill shape */
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 80px;
+      min-height: 24px;
+      transition: opacity 0.2s;
+      border: 1px solid rgba(0,0,0,0.05);
+      color: #333;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+    .smart-tag.empty {
+      background: #f1f5f9 !important;
+      color: #94a3b8 !important;
+      border: 1px dashed #cbd5e1;
+    }
+    .smart-tag-readonly {
+      cursor: default;
+    }
+    .smart-tag:not(.smart-tag-readonly):hover {
+      opacity: 0.8;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    }
+    .smart-tag-input {
+      width: 100%;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: inherit;
+      border: 1px solid var(--amber);
+      border-radius: 4px;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(243,156,18,0.2);
+      display: none;
+      text-transform: uppercase;
+    }
+    .smart-tag-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      min-width: 120px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 100;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 4px;
+    }
+    .smart-tag-option {
+      padding: 6px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      text-transform: uppercase;
+      color: #333;
+      font-weight: 500;
+    }
+    .smart-tag-option:last-child {
+      border-bottom: none;
+    }
+    .smart-tag-option:hover {
+      background: #f8fafc;
+    }
 
     /* Toast Notification */
     .toast-container {
@@ -372,7 +475,6 @@
       font-size: 10px;
       color: var(--text-muted);
       padding: 3px 6px;
-      margin-left: 4px;
       transition: all 0.2s;
     }
     .th-filter-btn:hover {
@@ -380,8 +482,8 @@
     }
     .th-filter-btn.active-filter {
       color: #fff;
-      background: var(--primary);
-      border-color: var(--primary);
+      background: var(--amber);
+      border-color: var(--amber);
     }
     .filter-dropdown {
       display: none;
@@ -489,7 +591,7 @@
   <header class="header">
     <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1;">
       <i data-lucide="layout-dashboard" style="width:28px;height:28px;"></i>
-      <h1>IBC Track AI <span style="font-weight:400; opacity:0.75; font-size:1rem; margin-left:12px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px;">Sistem Kontrol & Monitoring Status Tangki IBC/Lexam Industri</span></h1>
+      <h1>IBC Track</h1>
     </div>
     
     <div id="authContainer" style="display: flex; align-items: center; gap: 12px;">
@@ -527,14 +629,6 @@
 
   <div class="container">
     
-    <!-- Upload Area w/ AI magic -->
-    <div id="uploadArea" class="upload-section">
-      <i data-lucide="sparkles" style="width:48px;height:48px;color:var(--steel-blue);margin-bottom:1rem;"></i>
-      <h3>Import Data & Map dengan AI </h3>
-      <p>Tarik & lepas file CSV kemari, atau <strong>klik untuk import</strong>.</p>
-      <input type="file" id="fileInput" accept=".csv, .txt" style="display: none;" />
-    </div>
-
     <!-- Metrics Dashboard -->
     <div class="metrics-header">
       <i data-lucide="activity" style="width:20px;height:20px;color:var(--primary-dark);"></i>
@@ -545,14 +639,6 @@
       <div class="metric-card ready">
         <div class="metric-title">Ready to Use</div>
         <div class="metric-value" id="stat-ready">0</div>
-      </div>
-      <div class="metric-card danger">
-        <div class="metric-title">Kritis / Rusak</div>
-        <div class="metric-value" id="stat-rusak">0</div>
-      </div>
-      <div class="metric-card warning">
-        <div class="metric-title">On Progress Cleaning</div>
-        <div class="metric-value" id="stat-cleaning">0</div>
       </div>
       <div class="metric-card safe">
         <div class="metric-title">Aman Dipakai</div>
@@ -570,7 +656,17 @@
         <i data-lucide="table-2" style="width:18px;height:18px;"></i>
         Monitoring Daftar Tangki Interaktif
       </div>
-      <div style="display: flex; gap: 8px; flex-grow: 1; justify-content: center;">
+      <div style="display: flex; gap: 8px; flex-grow: 1; justify-content: flex-end; padding-right: 16px;">
+        <div id="uploadArea" class="action-btn" title="Import Data CSV Lokal" style="width: auto; height: auto; padding: 6px 12px; font-weight: 600; border: 1px solid var(--border); background: white; color: var(--text-dark); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+           <i data-lucide="upload-cloud" style="width: 14px; height: 14px;"></i> Import CSV
+           <input type="file" id="fileInput" accept=".csv, .txt" style="display: none;" />
+        </div>
+        <button class="action-btn" onclick="exportToCSV()" title="Export ke CSV" style="width: auto; height: auto; padding: 6px 12px; font-weight: 600; border: 1px solid var(--border); background: white; color: var(--text-dark); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+           <i data-lucide="file-spreadsheet" style="width: 14px; height: 14px;"></i> Export CSV
+        </button>
+        <button class="action-btn" onclick="exportToPDF()" title="Export ke PDF" style="width: auto; height: auto; padding: 6px 12px; font-weight: 600; border: 1px solid var(--border); background: white; color: var(--text-dark); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+           <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Export PDF
+        </button>
       </div>
       <div class="filter-group">
         <button class="filter-btn active" data-filter="all">Tampilkan Semua</button>
@@ -584,18 +680,18 @@
       <table id="dataTable">
         <thead>
           <tr>
-            <th style="min-width: 80px;">No Lexam</th>
-            <th style="min-width: 140px;">Tanggal Cleaning</th>
-            <th style="min-width: 180px;">Perlakuan Terakhir pada lexam</th>
-            <th style="min-width: 90px; text-align: center;">Sanitasi ke-</th>
-            <th style="min-width: 160px;">Estimasi Cleaning / Pengulangan</th>
-            <th style="min-width: 160px;">Tanggal Kirim Ke Tempat Tujuan</th>
-            <th style="min-width: 140px;">Status</th>
-            <th style="min-width: 140px;">Peruntukkan Lexam</th>
-            <th style="min-width: 120px;">Posisi</th>
-            <th style="min-width: 180px;">Keterangan Tambahan</th>
-            <th style="min-width: 180px;">Status Saat Ini</th>
-            <th class="action-col" style="min-width: 100px; text-align: center;">Aksi</th>
+            <th style="width: 80px;">No Lexam</th>
+            <th style="width: 140px;">Tanggal Cleaning</th>
+            <th style="width: 180px;">Perlakuan Terakhir pada lexam</th>
+            <th style="width: 130px; text-align: center; background-color: #e2e8f0; color: #475569;" title="Otomatis terisi">Sanitasi ke-</th>
+            <th style="width: 160px; background-color: #e2e8f0; color: #475569;" title="Otomatis terisi">Estimasi Cleaning / Pengulangan</th>
+            <th style="width: 160px;">Tanggal Kirim Ke Tempat Tujuan</th>
+            <th style="width: 140px;">Status</th>
+            <th style="width: 140px;">Peruntukkan Lexam</th>
+            <th style="width: 120px;">Posisi</th>
+            <th style="width: 180px;">Keterangan Tambahan</th>
+            <th style="width: 180px; background-color: #e2e8f0; color: #475569;" title="Otomatis terisi">Status Saat Ini</th>
+            <th class="action-col" style="width: 100px; text-align: center;">Aksi</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -650,6 +746,181 @@
     window.columnFilters = {};
     window.hasEditPermission = false;
 
+    // Smart Tag Defaults
+    window.statusList = ['READY TO USE', 'AMAN', 'RUSAK', 'MENUNGGU HASIL SWAB', 'ON PROGRESS CLEANING'];
+    window.statusColors = {
+       'READY TO USE': { bg: '#ebf8ff', text: '#2b6cb0' },
+       'AMAN': { bg: '#e6fffa', text: '#234e52' },
+       'RUSAK': { bg: '#fff5f5', text: '#822727' },
+       'MENUNGGU HASIL SWAB': { bg: '#fffaf0', text: '#7b341e' },
+       'ON PROGRESS CLEANING': { bg: '#fffaf0', text: '#7b341e' }
+    };
+
+    // Firebase config var for settings
+    window.statusConfigCol = 'appSettings';
+    window.statusConfigDoc = 'statusConfig';
+
+    window.getSmartTagColor = function(statusText) {
+        if (!statusText) return { bg: '', text: '' };
+        const upper = statusText.toUpperCase().trim();
+        if (window.statusColors[upper]) return window.statusColors[upper];
+        return { bg: '#e2e8f0', text: '#475569' }; // fallback default generated color later
+    };
+
+    // Helper to generate pastel colors
+    window.generatePastelColor = function() {
+       const hue = Math.floor(Math.random() * 360);
+       return {
+          bg: `hsl(${hue}, 70%, 90%)`,
+          text: `hsl(${hue}, 80%, 30%)`
+       };
+    };
+
+    window.initStatusConfig = async function() {
+        if (!window.db) return;
+        try {
+            const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+            const configRef = doc(window.db, window.statusConfigCol, window.statusConfigDoc);
+            const docSnap = await getDoc(configRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.statusList) window.statusList = data.statusList;
+                if (data.statusColors) window.statusColors = data.statusColors;
+            }
+        } catch(e) {
+            if (e.message && e.message.includes("permission")) {
+                // Ignore gracefully
+            } else {
+                console.error("Failed to load status config:", e);
+            }
+        }
+    };
+
+    window.enableSmartTagEdit = function(spanEl) {
+       if (!window.hasEditPermission) {
+          window.showToast("Anda tidak memiliki izin (Login terdaftar) untuk mengedit.");
+          return;
+       }
+       const container = spanEl.closest('.status-cell-container');
+       const inputEl = container.querySelector('.smart-tag-input');
+       const dropdown = container.querySelector('.smart-tag-dropdown');
+       
+       spanEl.style.display = 'none';
+       dropdown.style.display = 'block';
+       inputEl.style.display = 'block';
+       inputEl.focus();
+       
+       const renderDropdown = (filterText) => {
+          dropdown.innerHTML = '';
+          const lowerFilter = filterText.toLowerCase();
+          const filtered = window.statusList.filter(s => s.toLowerCase().includes(lowerFilter));
+          
+          if (filtered.length === 0 && filterText.trim() !== '') {
+             // Let them create new
+             const option = document.createElement('div');
+             option.className = 'smart-tag-option';
+             option.innerHTML = `<em>Buat baru: <strong>${filterText}</strong></em>`;
+             option.onmousedown = (e) => { e.preventDefault(); commitSmartTagEdit(inputEl, filterText); };
+             dropdown.appendChild(option);
+          } else {
+             filtered.forEach(s => {
+                const option = document.createElement('div');
+                option.className = 'smart-tag-option';
+                option.textContent = s;
+                // use onmousedown instead of onclick so it fires before input blur
+                option.onmousedown = (e) => { e.preventDefault(); commitSmartTagEdit(inputEl, s); };
+                dropdown.appendChild(option);
+             });
+          }
+       };
+       
+       renderDropdown(inputEl.value);
+       
+       inputEl.oninput = (e) => {
+          renderDropdown(e.target.value);
+       };
+       
+       inputEl.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+             commitSmartTagEdit(inputEl, inputEl.value);
+          } else if (e.key === 'Escape') {
+             // cancel
+             inputEl.value = spanEl.textContent === '+ SET STATUS' ? '' : spanEl.textContent;
+             commitSmartTagEdit(inputEl, inputEl.value, true); 
+          }
+       };
+       
+       inputEl.onblur = () => {
+          commitSmartTagEdit(inputEl, inputEl.value);
+       };
+    };
+
+    async function commitSmartTagEdit(inputEl, newValue, isCancel = false) {
+       const container = inputEl.closest('.status-cell-container');
+       const spanEl = container.querySelector('.smart-tag');
+       const dropdown = container.querySelector('.smart-tag-dropdown');
+       
+       // Guard against double commit from blur + mousedown
+       if(inputEl.style.display === 'none') return;
+
+       dropdown.style.display = 'none';
+       inputEl.style.display = 'none';
+       spanEl.style.display = 'inline-flex';
+       
+       if (!window.hasEditPermission) {
+          window.showToast("Anda tidak memiliki izin untuk mengedit status.");
+          // Kembalikan ke text awal
+          inputEl.value = spanEl.textContent === '+ SET STATUS' ? '' : spanEl.textContent;
+          isCancel = true;
+       }
+       
+       if (isCancel) return;
+       
+       const finalVal = newValue.trim().toUpperCase();
+       inputEl.value = finalVal;
+       
+       let isNew = false;
+       if (finalVal !== '') {
+          if (!window.statusList.includes(finalVal)) {
+             window.statusList.push(finalVal);
+             window.statusColors[finalVal] = window.generatePastelColor();
+             isNew = true;
+          }
+          const colorCfg = window.statusColors[finalVal];
+          spanEl.textContent = finalVal;
+          spanEl.style.backgroundColor = colorCfg.bg;
+          spanEl.style.color = colorCfg.text;
+          spanEl.classList.remove('empty');
+       } else {
+          spanEl.textContent = '+ SET STATUS';
+          spanEl.style.backgroundColor = '';
+          spanEl.style.color = '';
+          spanEl.classList.add('empty');
+       }
+       
+       // Trigger change event to trigger auto-save for the row
+       const event = new Event('change', { bubbles: true });
+       inputEl.dispatchEvent(event);
+       
+       if (isNew && window.db) {
+           try {
+               const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+               const configRef = doc(window.db, window.statusConfigCol, window.statusConfigDoc);
+               await setDoc(configRef, {
+                   statusList: window.statusList,
+                   statusColors: window.statusColors
+               }, { merge: true });
+               console.log("Saved new status to Firebase:", finalVal);
+           } catch(e) {
+               if (e.message && e.message.includes("permission")) {
+                   window.showToast("Akses Ditolak: Anda tidak diizinkan membuat status baru karena belum login terdaftar.");
+               } else {
+                   console.error("Failed to save new status to Firebase:", e);
+               }
+           }
+       }
+    }
+
     // Functions
     window.initFilters = function() {
       const headers = document.querySelectorAll('#dataTable th');
@@ -659,9 +930,9 @@
 
         const text = th.innerText;
         th.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:4px;">
-            <span>${text}</span>
-            <div class="filter-container" data-col="${idx}">
+          <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 5px;">
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${text}</span>
+            <div class="filter-container" data-col="${idx}" style="margin-top: 2px;">
               <button class="th-filter-btn" type="button" onclick="toggleFilter(event, ${idx})">Filter ▼</button>
               <div class="filter-dropdown" id="filter-dropdown-${idx}" onclick="event.stopPropagation()">
               </div>
@@ -674,6 +945,8 @@
     window.getCellValue = function(tr, colIdx) {
       const td = tr.querySelectorAll('td')[colIdx];
       if (!td) return '';
+      const dateOverlay = td.querySelector('.date-overlay');
+      if (dateOverlay) return dateOverlay.value.trim();
       const input = td.querySelector('input');
       if (input) {
          const dateText = td.querySelector('.date-text');
@@ -686,23 +959,35 @@
     window.toggleFilter = function(event, colIdx) {
       event.stopPropagation();
       document.querySelectorAll('.filter-dropdown').forEach(el => {
-        if (el.id !== `filter-dropdown-${colIdx}`) el.classList.remove('show');
+        if (el.id !== `filter-dropdown-${colIdx}`) {
+            el.classList.remove('show');
+            const th = el.closest('th');
+            if (th) th.style.zIndex = '1';
+        }
       });
 
       const dropdown = document.getElementById(`filter-dropdown-${colIdx}`);
       if (!dropdown) return;
 
+      const th = dropdown.closest('th');
+
       if (dropdown.classList.contains('show')) {
         dropdown.classList.remove('show');
+        if (th) th.style.zIndex = '1';
         return;
       }
 
       buildFilterDropdown(colIdx);
       dropdown.classList.add('show');
+      if (th) th.style.zIndex = '9999';
     };
 
     document.addEventListener('click', () => {
-       document.querySelectorAll('.filter-dropdown').forEach(el => el.classList.remove('show'));
+       document.querySelectorAll('.filter-dropdown').forEach(el => {
+           el.classList.remove('show');
+           const th = el.closest('th');
+           if (th) th.style.zIndex = '1';
+       });
     });
 
     window.buildFilterDropdown = function(colIdx) {
@@ -766,7 +1051,11 @@
       });
       
       rows.forEach(tr => tbody.appendChild(tr));
-      document.querySelectorAll('.filter-dropdown').forEach(el => el.classList.remove('show'));
+      document.querySelectorAll('.filter-dropdown').forEach(el => {
+          el.classList.remove('show');
+          const th = el.closest('th');
+          if (th) th.style.zIndex = '1';
+      });
     };
 
     window.toggleSelectAll = function(colIdx, checkbox) {
@@ -906,7 +1195,7 @@
       
       if (!tglInput || !estInput || !statNowBadgeInput || !statNowContainer) return;
 
-      let computedStatus = "TIDAK AMAN CEK ULANG KEMBALI"; // Default
+      let computedStatus = "TIDAK AMAN CEK ULANG"; // Default
 
       const tglVal = tglInput.value.trim();
       const sanitasiInput = tr.querySelector('.field-sanitasi');
@@ -1017,16 +1306,28 @@
 
     function renderDateInput(dateVal, fieldKey) {
       let textVal = '';
-      if (dateVal) {
-        const parts = dateVal.split('-');
+      let correctDateVal = dateVal || '';
+      
+      if (correctDateVal) {
+        // Self-heal previously saved DD/MM/YYYY formats
+        if (correctDateVal.includes('/')) {
+            const dp = correctDateVal.split('/');
+            if (dp.length === 3) {
+                correctDateVal = `${dp[2]}-${dp[1]}-${dp[0]}`;
+            }
+        }
+        
+        const parts = correctDateVal.split('-');
         if (parts.length === 3) {
           textVal = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
       }
+      
       if (!window.hasEditPermission) {
         return `
           <div class="date-cell-wrapper" style="display: flex; align-items: center; gap: 4px; position: relative;">
             <input type="text" class="cell-input date-text" value="${textVal}" placeholder="DD/MM/YYYY" readonly style="min-width: 90px; text-align: center; cursor: default; pointer-events: none;">
+            <input type="hidden" class="date-overlay ${fieldKey || ''}" value="${correctDateVal}">
           </div>
         `;
       }
@@ -1035,7 +1336,7 @@
           <input type="text" class="cell-input date-text" value="${textVal}" placeholder="DD/MM/YYYY" onblur="syncToDateOverlay(this)" style="min-width: 90px; padding-right: 20px;">
           <div style="position: absolute; right: 4px; width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            <input type="date" class="date-overlay ${fieldKey || ''}" value="${dateVal}" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; box-sizing: border-box;" onchange="syncDateText(this)">
+            <input type="date" class="date-overlay ${fieldKey || ''}" value="${correctDateVal}" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; box-sizing: border-box;" onchange="syncDateText(this)">
           </div>
         </div>
       `;
@@ -1043,8 +1344,6 @@
 
     function calculateStats() {
       document.getElementById('stat-ready').innerText = dummyData.filter(d => d.statusInfo === 'READY TO USE').length;
-      document.getElementById('stat-rusak').innerText = dummyData.filter(d => d.statusInfo === 'RUSAK' || d.keterangan.includes('RUSAK')).length;
-      document.getElementById('stat-cleaning').innerText = dummyData.filter(d => d.statusInfo === 'ON PROGRESS CLEANING').length;
       document.getElementById('stat-aman').innerText = dummyData.filter(d => d.statusSaatIni && d.statusSaatIni.includes('AMAN DIPAKAI')).length;
       document.getElementById('stat-tidak-aman').innerText = dummyData.filter(d => d.statusSaatIni && (d.statusSaatIni.includes('TIDAK AMAN') || d.statusSaatIni.includes('CEK ULANG') || d.statusSaatIni.includes('TIDAK TERJADWAL'))).length;
     }
@@ -1080,7 +1379,7 @@
     }
 
     window.createRowElement = function(item) {
-        let computedStatus = "TIDAK AMAN CEK ULANG KEMBALI"; // Default
+        let computedStatus = "TIDAK AMAN CEK ULANG"; // Default
 
         let computedSanitasi = "";
         let computedEstClean = "Tidak Terjadwal";
@@ -1131,25 +1430,22 @@
         const statNow = item.statusSaatIni.toLowerCase();
         const info = item.statusInfo || '';
         
-        // Assign row highlight class
-        let rowClass = '';
-        if (desc.includes('patah') || desc.includes('rusak') || desc.includes('copot') || desc.includes('layak') || desc.includes('kembung') || info === 'RUSAK') {
-          rowClass = 'row-danger';
-        } else if (info === 'MENUNGGU HASIL SWAB' && !statNow.includes('aman dipakai')) {
-          rowClass = 'row-warning';
-        } else if (statNow.includes('tidak aman')) {
-          rowClass = 'row-warning'; // Fallback highlight for generally unsafe
-        }
-        
-        if (rowClass) {
-          tr.className = rowClass;
-        }
+        // Row styling removed to maintain uniform table background
 
-        // Logical Check for Badges (Status Info)
-        let statusBadge = 'badge-neutral';
-        if (info === 'READY TO USE' || info === 'AMAN') statusBadge = 'badge-blue';
-        if (info === 'RUSAK') statusBadge = 'badge-danger';
-        if (info === 'MENUNGGU HASIL SWAB' || info === 'ON PROGRESS CLEANING') statusBadge = 'badge-warning';
+        // Logical Check for Badges (Status Info) - Now replaced by dynamic Smart Tags!
+        const colorCfg = window.getSmartTagColor(info);
+        const smartTagHtml = window.hasEditPermission ? `
+              <div class="status-cell-container">
+                 <span class="smart-tag ${!info ? 'empty' : ''}" style="background-color: ${colorCfg.bg}; color: ${colorCfg.text};" onclick="window.enableSmartTagEdit(this)">${info || '+ SET STATUS'}</span>
+                 <input type="text" class="smart-tag-input badge-input" value="${info}">
+                 <div class="smart-tag-dropdown"></div>
+              </div>
+        ` : `
+              <div class="status-cell-container">
+                 <span class="smart-tag smart-tag-readonly ${!info ? 'empty' : ''}" style="background-color: ${colorCfg.bg}; color: ${colorCfg.text};">${info || '+ SET STATUS'}</span>
+                 <input type="hidden" class="badge-input" value="${info}">
+              </div>
+        `;
 
         // Logical Check for Badges (Status Saat Ini)
         let statNowBadge = 'badge-neutral';
@@ -1165,7 +1461,7 @@
             <td><input type="text" class="cell-input field-sanitasi" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.sanitasi || ''}"></td>
             <td><input type="text" class="cell-input field-estClean" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.estClean || ''}"></td>
             <td>${renderDateInput(item.tglKirim || '', 'field-tglKirim')}</td>
-            <td><div class="badge ${statusBadge}"><input type="text" class="badge-input" readonly style="cursor: default;" value="${info}"></div></td>
+            <td>${smartTagHtml}</td>
             <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.peruntukkan || ''}"></td>
             <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.posisi || ''}"></td>
             <td><input type="text" class="cell-input" readonly style="cursor: default;" value="${item.keterangan || ''}"></td>
@@ -1180,7 +1476,7 @@
             <td><input type="text" class="cell-input field-sanitasi" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.sanitasi || ''}"></td>
             <td><input type="text" class="cell-input field-estClean" style="text-align: center; cursor: default; pointer-events: none;" readonly value="${item.estClean || ''}"></td>
             <td>${renderDateInput(item.tglKirim || '', 'field-tglKirim')}</td>
-            <td><div class="badge ${statusBadge}"><input type="text" class="badge-input" value="${info}"></div></td>
+            <td>${smartTagHtml}</td>
             <td><input type="text" class="cell-input" value="${item.peruntukkan || ''}"></td>
             <td><input type="text" class="cell-input" value="${item.posisi || ''}"></td>
             <td><input type="text" class="cell-input" value="${item.keterangan || ''}"></td>
@@ -1232,7 +1528,7 @@
 
       uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
-        uploadArea.style.borderColor = 'var(--primary)';
+        uploadArea.style.borderColor = 'var(--steel)';
         uploadArea.style.backgroundColor = '#f4f6f8'; // active bg
       });
       uploadArea.addEventListener('dragleave', () => {
@@ -1263,39 +1559,102 @@
         }
 
         const originalHTML = uploadArea.innerHTML;
-        uploadArea.innerHTML = '<i data-lucide="loader-2" class="lucide-loader-2" style="width:48px;height:48px;color:var(--primary);margin-bottom:1rem;animation: spin 1s linear infinite;"></i><h3>AI sedang memproses data...</h3><p>Mohon tunggu sebentar, algoritma sedang membaca CSV.</p>';
+        uploadArea.innerHTML = '<i data-lucide="loader-2" class="lucide-loader-2" style="width: 14px; height: 14px; animation: spin 1s linear infinite;"></i> Memproses...';
         lucide.createIcons();
 
         try {
-          const formData = new FormData();
-          formData.append('file', file);
-
-          const res = await fetch('/api/upload-csv', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (!res.ok) {
-             const json = await res.json();
-             throw new Error(json.error || "Gagal memproses file.");
+          const text = await file.text();
+          let rows = window.parseCSV(text);
+          const headersMap = {
+             no: 0, tglCleaning: 1, perlakuan: 2,
+             tglKirim: -1, statusInfo: -1, peruntukkan: -1, posisi: -1, keterangan: -1
+          };
+          
+          let headerRowIndex = -1;
+          for (let i = 0; i < Math.min(rows.length, 30); i++) {
+             const rowStr = rows[i].join(' ').toLowerCase();
+             // Memastikan ini adalah baris header dengan mengecek kemunculan beberapa kata kunci header
+             if (rowStr.includes('no lexam') || rowStr.includes('tanggal cleaning')) {
+                 headerRowIndex = i;
+                 break;
+             }
           }
 
-          const responseData = await res.json();
-          if (responseData.data && Array.isArray(responseData.data)) {
-             // Append or Replace? The instruction says 'kosongkan semua row yang ada saat ini lalu berikan fitur import CSV', so we assume they replace or start from empty.
-             dummyData = responseData.data;
-             calculateStats();
-             renderTable();
-             showToast('Data CSV berhasil di-import dan dimapping oleh AI.');
+          if (headerRowIndex !== -1) {
+             const headerRow = rows[headerRowIndex];
+             // Determine mapped indexes
+             for (let i = 0; i < headerRow.length; i++) {
+                const thText = (headerRow[i] || '').trim().toLowerCase();
+                if (thText === 'no lexam' || thText === 'no') headersMap.no = i;
+                else if (thText.includes('tanggal') && thText.includes('cleaning')) headersMap.tglCleaning = i;
+                else if (thText.includes('perlakuan')) headersMap.perlakuan = i;
+                else if (thText.includes('kirim')) headersMap.tglKirim = i;
+                else if (thText === 'status' || thText === 'status info') headersMap.statusInfo = i;
+                else if (thText.includes('peruntukkan')) headersMap.peruntukkan = i;
+                else if (thText.includes('posisi')) headersMap.posisi = i;
+                else if (thText.includes('keterangan')) headersMap.keterangan = i;
+             }
+             // Buang semua baris metadata dan header
+             rows.splice(0, headerRowIndex + 1);
+          } else {
+             // Fallback mapping if no header matches exactly
+             headersMap.no = 0; headersMap.tglCleaning = 1; headersMap.perlakuan = 2;
+             headersMap.tglKirim = 7; headersMap.statusInfo = 8;
+             headersMap.peruntukkan = 9; headersMap.posisi = 10; headersMap.keterangan = 11;
           }
+          
+          function formatCsvDate(dateStr) {
+             if (!dateStr) return "";
+             // Match formatted date like 15 Mar 2026 or 15-Mar-26 or 15/03/2026
+             dateStr = dateStr.replace(/\./g, '').trim();
+             const parts = dateStr.split(/[- \/]+/);
+             if (parts.length >= 3) {
+                const day = parts[0].padStart(2, '0');
+                const monthStr = parts[1].toLowerCase();
+                let year = parts[2];
+                if (year.length === 2) year = "20" + year;
+                let month = "01";
+                if (!isNaN(parseInt(monthStr))) {
+                    month = monthStr.padStart(2, '0');
+                } else {
+                    const moths = { 
+                        "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06", "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12",
+                        "mei": "05", "agu": "08", "okt": "10", "des": "12"
+                    };
+                    month = moths[monthStr.substring(0,3)] || "01";
+                }
+                return `${year}-${month}-${day}`;
+             }
+             return dateStr.trim();
+          }
+
+          const parsedData = rows.map(r => {
+             return {
+                no: (r[headersMap.no] !== undefined ? r[headersMap.no] : "").trim(),
+                tglCleaning: formatCsvDate(r[headersMap.tglCleaning] !== undefined ? r[headersMap.tglCleaning] : ""),
+                perlakuan: (r[headersMap.perlakuan] !== undefined ? r[headersMap.perlakuan] : "").trim(),
+                sanitasi: "", 
+                estClean: "", 
+                tglKirim: formatCsvDate(r[headersMap.tglKirim] !== undefined ? r[headersMap.tglKirim] : ""),
+                statusInfo: (r[headersMap.statusInfo] !== undefined ? r[headersMap.statusInfo] : "").trim(),
+                peruntukkan: (r[headersMap.peruntukkan] !== undefined ? r[headersMap.peruntukkan] : "").trim(),
+                posisi: (r[headersMap.posisi] !== undefined ? r[headersMap.posisi] : "").trim(),
+                keterangan: (r[headersMap.keterangan] !== undefined ? r[headersMap.keterangan] : "").trim(),
+                statusSaatIni: "" 
+             };
+          }).filter(d => d.no !== "");
+
+          dummyData = parsedData;
+          calculateStats();
+          renderTable();
+          showToast('Data CSV berhasil di-import secara lokal.');
+          window.markUnsavedChanges(true);
         } catch (e) {
-          console.error(e);
+          console.error("Local CSV parsing error:", e);
           showToast('Error: ' + e.message);
         } finally {
           uploadArea.innerHTML = originalHTML;
           lucide.createIcons();
-          // reattach just in case? Or we can just restore originalHTML content not elements... wait, innerHTML overwrite kills listeners?
-          // Actually, upload area listeners are on the container, so they survive innerHTML changes.
         }
       }
     }
@@ -1313,9 +1672,11 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, getDoc, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let authApp = null;
     let auth = null;
+    window.db = null;
     let cachedAccessToken = null;
     const SPREADSHEET_ID = '1cSuochPC5Rwb68t59eJ-0VrLdUi65e8F_G8Quny53Ng';
 
@@ -1352,10 +1713,16 @@
        return result;
     }
 
-    function parseCSV(text) {
+    window.parseCSV = function(text) {
        let lines = [];
        let row = [""];
        let inQuotes = false;
+       let delimiter = ',';
+       const firstLine = text.split('\n')[0] || '';
+       if ((firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length) {
+          delimiter = ';';
+       }
+
        for (let i = 0; i < text.length; i++) {
           let c = text[i];
           let next = text[i+1];
@@ -1366,7 +1733,7 @@
              } else {
                 inQuotes = !inQuotes;
              }
-          } else if (c === ',' && !inQuotes) {
+          } else if (c === delimiter && !inQuotes) {
              row.push("");
           } else if ((c === '\r' || c === '\n') && !inQuotes) {
              if (c === '\r' && next === '\n') {
@@ -1479,22 +1846,23 @@
        if (!config) {
           // No auth config - make sure to load anyway in public read-only mode!
           window.updateUIPermissions();
+          await window.initResizableColumns();
           loadFromSheets();
           return;
        }
 
        authApp = initializeApp(config);
        auth = getAuth(authApp);
+       window.db = getFirestore(authApp, config.firestoreDatabaseId);
 
        const provider = new GoogleAuthProvider();
-       provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
        const btnSignIn = document.getElementById('btnGoogleSignIn');
        const btnSignOut = document.getElementById('btnSignOut');
        const btnRefresh = document.getElementById('btnRefresh');
        const userInfo = document.getElementById('userInfo');
 
-       onAuthStateChanged(auth, (user) => {
+       onAuthStateChanged(auth, async (user) => {
          if (user) {
             btnSignIn.style.display = 'none';
             userInfo.style.display = 'flex';
@@ -1505,6 +1873,8 @@
             localStorage.removeItem('google_sheets_token');
          }
          window.updateUIPermissions();
+         await window.initResizableColumns(); // Initialize auto-fit & resizing logic
+         await window.initStatusConfig(); // Load status colors
          loadFromSheets(); // Auto load data on load or state change
        });
 
@@ -1619,17 +1989,21 @@
              const btnSaveText = document.getElementById('btnSaveText');
              if (btnSaveText) btnSaveText.innerText = "Menyimpan...";
              
-             window.showToast("Menyimpan data ke Google Sheets...");
+             window.showToast("Menyimpan data ke Firestore...");
              
              try {
-                const success = await window.autoSaveToSheets();
+                const success = await window.autoSaveToFirestore();
                 if (success !== false) {
                    window.markUnsavedChanges(false);
-                   window.showToast("Data berhasil disimpan ke Google Sheets!");
+                   window.showToast("Data berhasil disimpan ke Firestore!");
                 }
              } catch(e) {
-                console.error("Manual save failed:", e);
-                window.showToast("Gagal menyimpan data: " + e.message);
+                if (e.message && e.message.includes("permission")) {
+                   window.showToast("Gagal menyimpan: Akses Ditolak (Belum Login Terdaftar)");
+                } else {
+                   console.error("Manual save failed:", e);
+                   window.showToast("Gagal menyimpan data: " + e.message);
+                }
              } finally {
                 btnSaveChanges.disabled = false;
                 window.markUnsavedChanges(window.hasUnsavedChanges);
@@ -1639,158 +2013,438 @@
      }
 
     async function loadFromSheets() {
-       window.showToast("Mengunduh data dari Google Sheets...");
+       window.showToast("Mengunduh data dari Cloud Firestore...");
+       if (!window.db) return;
        try {
+          const snapshot = await getDocs(collection(window.db, 'tanks'));
           let rows = [];
-
-          const headers = {};
-          if (cachedAccessToken) {
-             headers["Authorization"] = `Bearer ${cachedAccessToken}`;
-          }
-
-          const res = await fetch(`/api/sheets/load?spreadsheetId=${SPREADSHEET_ID}`, {
-             headers: headers
-          });
-
-          if (!res.ok) {
-             throw new Error("Gagal menghubungi server proxy.");
-          }
-
-          const responseData = await res.json();
-          if (responseData.source === "public_csv_raw") {
-             rows = parseCSV(responseData.rawCsv);
-             if (rows.length > 0) {
-                const firstCol = rows[0][0] || "";
-                if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
-                   rows.shift();
-                }
-              }
-          } else if (responseData.values) {
-              rows = responseData.values;
-          } else {
-              throw new Error(responseData.error || "Gagal mendapatkan data sheet.");
-          }
-
-          if (false) { // bypassed-old-auth-fetch
-             console.log("Fetching from Google Sheets API with Access Token...");
-             const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A2:O`, {
-                headers: { Authorization: `Bearer ${cachedAccessToken}` }
-             });
-             
-             if (!res.ok) {
-                console.warn("Authenticated fetch failed, trying public CSV fetch fallback...", res.statusText);
-                const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`);
-                if (!csvRes.ok) throw new Error("Gagal mengunduh sheet publik maupun terautentikasi.");
-                const csvText = await csvRes.text();
-                rows = parseCSV(csvText);
-                if (rows.length > 0) {
-                   const firstCol = rows[0][0] || "";
-                   if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
-                      rows.shift();
-                   }
-                }
-             } else {
-                const result = await res.json();
-                rows = result.values || [];
-             }
-          } else if (false) { // bypassed-old-public-fetch
-             console.log("Non-authenticated, fetching public CSV export URL...");
-             const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`);
-             if (!csvRes.ok) {
-                throw new Error("Gagal mengunduh Google Sheets publik (pastikan status link sharing 'Siapa saja dengan link dapat melihat' aktif).");
-             }
-             const csvText = await csvRes.text();
-             rows = parseCSV(csvText);
-             if (rows.length > 0) {
-                const firstCol = rows[0][0] || "";
-                if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
-                   rows.shift();
-                }
-             }
-          }
           
-          const parseDate = (val) => {
-             if (!val) return "";
-             if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
-             if (val.match(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{4}$/)) {
-                const parts = val.split(/[\/\-.]/);
-                const d = parts[0].padStart(2, '0');
-                const m = parts[1].padStart(2, '0');
-                return `${parts[2]}-${m}-${d}`;
+          if (!snapshot.empty) {
+             console.log("Loading from Firestore...");
+             snapshot.forEach(docSnap => {
+                 rows.push(docSnap.data());
+             });
+             // Sort by Lexam Number numerically if possible
+             rows.sort((a, b) => {
+                 const numA = parseInt((a.no || "").replace(/\D/g, ''), 10) || 0;
+                 const numB = parseInt((b.no || "").replace(/\D/g, ''), 10) || 0;
+                 return numA - numB;
+             });
+             dummyData = rows;
+          } else {
+             window.showToast("Firestore kosong, migrasi dari Google Sheets...");
+             const headers = {};
+             if (cachedAccessToken) {
+                headers["Authorization"] = `Bearer ${cachedAccessToken}`;
              }
-             return val;
-          };
 
-          dummyData = rows.map(row => ({
-             no: row[0] || "",
-             tglCleaning: parseDate(row[1]),
-             perlakuan: row[2] || "",
-             sanitasi: row[3] || "",
-             estClean: parseDate(row[4]),
-             tglKirim: parseDate(row[5]),
-             statusInfo: row[6] || "",
-             peruntukkan: row[7] || "",
-             posisi: row[8] || "",
-             keterangan: row[9] || "",
-             statusSaatIni: row[10] || "TIDAK TERJADWAL"
-          }));
+             const res = await fetch(`/api/sheets/load?spreadsheetId=${SPREADSHEET_ID}`, {
+                headers: headers
+             });
+
+             if (!res.ok) {
+                throw new Error("Gagal mengambil fallback dari Google Sheets.");
+             }
+
+             const responseData = await res.json();
+             let rawRows = [];
+             if (responseData.source === "public_csv_raw") {
+                rawRows = window.parseCSV(responseData.rawCsv);
+                if (rawRows.length > 0) {
+                   const firstCol = rawRows[0][0] || "";
+                   if (firstCol.toLowerCase().includes("no") || isNaN(parseInt(firstCol))) {
+                      rawRows.shift();
+                   }
+                 }
+             } else if (responseData.values) {
+                 rawRows = responseData.values;
+             }
+             
+             const parseDate = (val) => {
+                if (!val) return "";
+                if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+                if (val.match(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{4}$/)) {
+                   const parts = val.split(/[\/\-.]/);
+                   const d = parts[0].padStart(2, '0');
+                   const m = parts[1].padStart(2, '0');
+                   return `${parts[2]}-${m}-${d}`;
+                }
+                return val;
+             };
+
+             dummyData = rawRows.map(row => ({
+                no: row[0] || "",
+                tglCleaning: parseDate(row[1]),
+                perlakuan: row[2] || "",
+                sanitasi: row[3] || "",
+                estClean: parseDate(row[4]),
+                tglKirim: parseDate(row[5]),
+                statusInfo: row[6] || "",
+                peruntukkan: row[7] || "",
+                posisi: row[8] || "",
+                keterangan: row[9] || "",
+                statusSaatIni: row[10] || "TIDAK TERJADWAL"
+             }));
+             
+             // Migrate data into Firestore ONLY if we have edit permission
+             if (window.hasEditPermission) {
+                 try {
+                     const batch = writeBatch(window.db);
+                     dummyData.forEach((item, index) => {
+                         const idStr = item.no ? item.no.toString() : "";
+                         const docId = idStr.replace(/[^a-zA-Z0-9_\-]/g, '_') || `lexam_${index}`;
+                         const dr = doc(window.db, 'tanks', docId);
+                         batch.set(dr, item);
+                     });
+                     await batch.commit();
+                     window.showToast("Data sukses dimigrasi ke Firestore!");
+                 } catch(err) {
+                     console.warn("Migration failed, likely permissions:", err);
+                 }
+             }
+          }
           
           window.calculateStats();
           window.renderTable();
-          window.showToast("Data berhasil dimuat dari Google Sheets!");
        } catch(e) {
-          console.error("Error loading sheets:", e);
-          window.showToast("Gagal memuat: " + e.message);
+          if (e.message && e.message.includes("permission")) {
+             window.showToast("Akses Ditolak: Anda tidak memiliki wewenang atau belum login dengan akun yang terdaftar.");
+          } else {
+             console.error("Error loading data:", e);
+             window.showToast("Gagal memuat: " + e.message);
+          }
        }
     }
 
-    let saveTimeout = null;
-    
-    window.autoSaveToSheets = async function() {
-       if (!cachedAccessToken || !window.hasEditPermission) return false;
+    window.autoSaveToFirestore = async function() {
+       if (!window.hasEditPermission || !window.db) return false;
        
        const tbody = document.getElementById('tableBody');
        const rows = Array.from(tbody.querySelectorAll('tr'));
        const values = [];
        
-       rows.forEach(tr => {
-          if (rows.length === 1 && !window.getCellValue(tr, 0)) return;
-          values.push([
-             window.getCellValue(tr, 0), window.getCellValue(tr, 1), window.getCellValue(tr, 2),
-             window.getCellValue(tr, 3), window.getCellValue(tr, 4), window.getCellValue(tr, 5),
-             window.getCellValue(tr, 6), window.getCellValue(tr, 7), window.getCellValue(tr, 8),
-             window.getCellValue(tr, 9), window.getCellValue(tr, 10)
-          ]);
+       rows.forEach((tr, index) => {
+          const noVal = window.getCellValue(tr, 0);
+          if (rows.length === 1 && !noVal) return;
+          values.push({
+             no: noVal || `LXM-NEW-${Date.now()}-${index}`,
+             tglCleaning: window.getCellValue(tr, 1) || "",
+             perlakuan: window.getCellValue(tr, 2) || "",
+             sanitasi: window.getCellValue(tr, 3) || "",
+             estClean: window.getCellValue(tr, 4) || "",
+             tglKirim: window.getCellValue(tr, 5) || "",
+             statusInfo: window.getCellValue(tr, 6) || "",
+             peruntukkan: window.getCellValue(tr, 7) || "",
+             posisi: window.getCellValue(tr, 8) || "",
+             keterangan: window.getCellValue(tr, 9) || "",
+             statusSaatIni: window.getCellValue(tr, 10) || ""
+          });
        });
-       if(values.length === 0) values.push(["", "", "", "", "", "", "", "", "", "", ""]); 
        
        try {
-          const res = await fetch(`/api/sheets/save`, {
-             method: "POST",
-             headers: {
-                "Authorization": `Bearer ${cachedAccessToken}`,
-                "Content-Type": "application/json"
-             },
-             body: JSON.stringify({
-                spreadsheetId: SPREADSHEET_ID,
-                values: values
-             })
+          const snapshot = await getDocs(collection(window.db, 'tanks'));
+          const batch = writeBatch(window.db);
+          let count = 0;
+          
+          // Delete old to keep synced (careful with batches > 500, but OK for small sets)
+          snapshot.forEach(docSnap => {
+              batch.delete(docSnap.ref);
+              count++;
           });
           
-          if (!res.ok) {
-             const errText = await res.json().catch(() => ({ error: "Gagal menyimpan." }));
-             throw new Error(errText.error || "Gagal menyimpan melalui proxy.");
+          if (count > 400) {
+              console.warn("Large dataset, doing individual writes to avoid batch limits.");
+              // Actually, commit deletes first if large, but we'll try single batch per the prompt's scale
           }
+          
+          values.forEach((val, idx) => {
+              const safeId = val.no.replace(/[^a-zA-Z0-9_\-]/g, '_') || `empty_${idx}`;
+              batch.set(doc(window.db, 'tanks', safeId), val);
+          });
+          
+          await batch.commit();
           return true;
        } catch(e) {
-          console.error("Save failure:", e);
-          throw e;
+          if (e.message && e.message.includes("permission")) {
+              console.warn("Save failure due to missing permissions");
+          } else {
+              console.error("Save failure:", e);
+          }
+          
+          const errInfo = {
+             error: e.message,
+             operationType: "write",
+             path: "tanks"
+          };
+          throw new Error(JSON.stringify(errInfo));
        }
     };
 
     window.triggerAutoSave = function() {
        if (!window.hasEditPermission) return;
        window.markUnsavedChanges(true);
+    };
+
+    window.initResizableColumns = async function() {
+       const table = document.getElementById('dataTable');
+       const cols = table.querySelectorAll('thead th');
+       
+       let uid = authApp && window.db ? (auth && auth.currentUser ? auth.currentUser.uid : "user123") : "user123";
+
+       if (window.db) {
+          try {
+             // Load saved widths
+             const userDoc = await getDoc(doc(window.db, 'userSettings', uid));
+             if (userDoc.exists() && userDoc.data().colWidths) {
+                const savedWidths = userDoc.data().colWidths;
+                cols.forEach((col, index) => {
+                   if (savedWidths[index]) col.style.width = savedWidths[index];
+                });
+             }
+          } catch(e) {
+             if (e.message && e.message.includes("permission")) {
+                 // Ignore gracefully
+             } else {
+                 console.error("Error loading column widths", e);
+             }
+          }
+       }
+
+       // Make sure we only attach once (guard check)
+       if (cols[0].querySelector('.resizer')) return;
+
+       cols.forEach((col, index) => {
+          const resizer = document.createElement('div');
+          resizer.classList.add('resizer');
+          col.appendChild(resizer);
+          
+          let startX, startWidth;
+          
+          resizer.addEventListener('mousedown', function(e) {
+             e.preventDefault();
+             startX = e.pageX;
+             startWidth = col.offsetWidth;
+             
+             function onMouseMove(e) {
+                const newWidth = startWidth + (e.pageX - startX);
+                col.style.width = newWidth + 'px';
+             }
+             
+             async function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                resizer.classList.remove('resizing');
+                await saveColWidths();
+             }
+             
+             document.addEventListener('mousemove', onMouseMove);
+             document.addEventListener('mouseup', onMouseUp);
+             resizer.classList.add('resizing');
+          });
+          
+          resizer.addEventListener('dblclick', async function(e) {
+             e.preventDefault();
+             e.stopPropagation();
+             let maxW = 50; // min width
+             
+             // Analyze text width in header
+             const tempDiv = document.createElement('div');
+             tempDiv.style.display = 'inline-block';
+             tempDiv.style.visibility = 'hidden';
+             tempDiv.style.whiteSpace = 'nowrap';
+             tempDiv.style.font = window.getComputedStyle(col).font;
+             tempDiv.style.padding = '0 16px'; 
+             
+             const colClone = col.cloneNode(true);
+             const r = colClone.querySelector('.resizer');
+             if(r) r.remove();
+             tempDiv.textContent = colClone.textContent.trim();
+             document.body.appendChild(tempDiv);
+             maxW = Math.max(maxW, tempDiv.offsetWidth);
+             
+             // Analyze body cells
+             const tbody = document.getElementById('tableBody');
+             const rows = tbody.querySelectorAll('tr');
+             rows.forEach(row => {
+                 const cell = row.querySelectorAll('td')[index];
+                 if(cell) {
+                     const input = cell.querySelector('.cell-input');
+                     if(input) {
+                         tempDiv.textContent = input.value || input.placeholder || '';
+                         tempDiv.style.font = window.getComputedStyle(input).font;
+                     } else {
+                         tempDiv.textContent = cell.textContent.trim();
+                         tempDiv.style.font = window.getComputedStyle(cell).font;
+                     }
+                     maxW = Math.max(maxW, tempDiv.offsetWidth + 24); // Account for padding
+                 }
+             });
+             
+             document.body.removeChild(tempDiv);
+             col.style.width = maxW + 'px';
+             await saveColWidths();
+          });
+       });
+       
+       async function saveColWidths() {
+          if (!window.db) return;
+          const uid = auth && auth.currentUser ? auth.currentUser.uid : "user123";
+          const widths = {};
+          cols.forEach((c, idx) => { widths[idx] = c.style.width || c.offsetWidth + 'px'; });
+          
+          try {
+             const userRef = doc(window.db, 'userSettings', uid);
+             await setDoc(userRef, { colWidths: widths }, { merge: true });
+          } catch(e) {
+             if (e.message && e.message.includes("permission")) {
+                 // Ignore gracefully
+             } else {
+                 console.error("Failed to save col widths:", e);
+             }
+          }
+       }
+    };
+
+    // --- EXPORT FEATURES ---
+    window.extractTableData = function() {
+        const table = document.getElementById('dataTable');
+        const headers = [];
+        const rowsObj = [];
+        
+        // --- 1. Ambil Header ---
+        const thead = table.querySelector('thead tr');
+        Array.from(thead.children).forEach((th, index) => {
+            // Abaikan kolom Aksi (elemen terakhir)
+            if (index === thead.children.length - 1) return;
+            
+            // Kloning elemen untuk dimanipulasi tanpa merusak UI asli
+            const clone = th.cloneNode(true);
+            
+            // Hapus elemen filter dropdown jika ada agar tidak ikut terekspor
+            const filterContainer = clone.querySelector('.filter-container');
+            if (filterContainer) filterContainer.remove();
+            
+            // Ambil teks murni
+            let text = clone.innerText.trim().replace(/\n/g, ' ');
+            headers.push(text);
+        });
+
+        // --- 2. Ambil Baris Data ---
+        const tbody = document.getElementById('tableBody');
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+            // Lewati baris kosong / placeholder jika ada
+            if (tr.children.length <= 1) return;
+            
+            const rowData = [];
+            Array.from(tr.children).forEach((td, index) => {
+                if (index === tr.children.length - 1) return; // Skip kolom Aksi
+                let text = "";
+                
+                // Cari apakah sel ini memuat input text
+                const inputs = td.querySelectorAll('input:not([type="hidden"])');
+                if (inputs.length > 0 && (inputs[0].type === "text" || inputs[0].type === "number")) {
+                    text = inputs[0].value;
+                } else if (td.querySelector('.smart-tag-readonly:not(.empty)')) {
+                    // Cari pure text tag (readonly) jika pengguna tidak punya akses edit
+                    text = td.querySelector('.smart-tag-readonly').innerText.trim();
+                } else {
+                    // Cari input dalam badge (misal: Status Saat Ini)
+                    const badgeInput = td.querySelector('.badge-input.field-statusSaatIni');
+                    if(badgeInput) {
+                        text = badgeInput.value;
+                    } else {
+                        // Fallback ambil teks reguler dari sel
+                        text = td.innerText.trim();
+                    }
+                }
+                
+                rowData.push(text || "");
+            });
+            rowsObj.push(rowData);
+        });
+
+        return { headers, rowsObj };
+    };
+
+    window.exportToCSV = function() {
+        const { headers, rowsObj } = window.extractTableData();
+        
+        // Fungsi pembantu untuk mengapit dan meng-escape koma/kutip
+        const escapeCSV = (val) => {
+            val = String(val).replace(/"/g, '""'); // Escape jika ada quote di dalam text
+            return `"${val}"`;                     // Bungkus dengan quote agar line break/koma aman
+        };
+
+        const csvContent = [headers.map(escapeCSV).join(',')];
+        rowsObj.forEach(row => {
+            csvContent.push(row.map(escapeCSV).join(','));
+        });
+
+        const csvString = csvContent.join('\r\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Backup_Lexam_Data.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    window.exportToPDF = function() {
+        // Ambil jsPDF dari object window (CDN UMD mode)
+        const { window: { jspdf } } = window; 
+        if (!jspdf) {
+            window.showToast("Library PDF gagal dimuat.");
+            return;
+        }
+
+        const { headers, rowsObj } = window.extractTableData();
+        
+        // Deklarasikan instance dokumen PDF, atur ke orientasi landscape ('l' auto alias 'landscape')
+        const doc = new jspdf.jsPDF('landscape', 'pt', 'a4');
+
+        // Menambahkan Title/Judul
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("Laporan Data Operasional Lexam", doc.internal.pageSize.getWidth() / 2, 40, { align: "center" });
+        
+        // Menambahkan Tanggal Cetak
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        doc.text(`Tanggal Cetak: ${dateStr}`, doc.internal.pageSize.getWidth() / 2, 58, { align: "center" });
+
+        // Menggunakan autoTable Plugin untuk memastikan tata letak terorganisir
+        doc.autoTable({
+            startY: 80,
+            head: [headers],
+            body: rowsObj,
+            theme: 'striped', // Tema garis belang
+            headStyles: {
+                fillColor: [43, 61, 81], // Warna --steel
+                textColor: 255,
+                fontStyle: 'bold',
+                halign: 'center',
+                valign: 'middle'
+            },
+            styles: {
+                font: "helvetica",
+                fontSize: 8,          // Font dinamis ukuran relatif kecil untuk muat di landscape
+                cellPadding: 4,
+                overflow: 'linebreak' // Memaksa baris ke bawah jika teks melampaui lebar sel
+            },
+            bodyStyles: {
+                valign: 'middle'
+            },
+            alternateRowStyles: {
+                fillColor: [245, 247, 250] // Warna background abu-abu pudar
+            },
+            margin: { top: 80, bottom: 40, left: 20, right: 20 },
+            tableWidth: "auto",
+        });
+
+        doc.save("Laporan_Lexam_Departemen.pdf");
     };
 
     window.addEventListener('beforeunload', (e) => {

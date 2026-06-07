@@ -1,0 +1,30 @@
+{
+  "entities": {
+    "TankInspection": {
+      "title": "Tank Inspection",
+      "description": "Daily inspection status for an IBC/Lexam tank",
+      "type": "object",
+      "properties": {
+        "no": { "type": "string", "description": "Lexam number" },
+        "tglCleaning": { "type": "string" },
+        "perlakuan": { "type": "string" },
+        "sanitasi": { "type": "string" },
+        "estClean": { "type": "string" },
+        "tglKirim": { "type": "string" },
+        "statusInfo": { "type": "string" },
+        "peruntukkan": { "type": "string" },
+        "posisi": { "type": "string" },
+        "keterangan": { "type": "string" },
+        "statusSaatIni": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["no"]
+    }
+  },
+  "firestore": {
+    "tanks/{tankId}": {
+      "schema": { "$ref": "#/entities/TankInspection" },
+      "description": "Stores all tank inspection data."
+    }
+  }
+}
